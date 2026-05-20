@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spark AQE — Deep Dive Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=Literata:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #f97316;
+    --accent2: #38bdf8;
+    --accent3: #a78bfa;
+    --accent4: #34d399;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --code-bg: #0d1424;
+    --tag-orange: rgba(249,115,22,0.12);
+    --tag-blue: rgba(56,189,248,0.12);
+    --tag-purple: rgba(167,139,250,0.12);
+    --tag-green: rgba(52,211,153,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Literata', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.75;
+    min-height: 100vh;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* SIDEBAR NAV */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .sidebar-version {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent4);
+    background: var(--tag-green);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .nav-section {
+    padding: 16px 16px 8px;
+  }
+
+  .nav-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-dim);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nav-link:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .nav-link.active {
+    background: var(--tag-orange);
+    color: var(--accent);
+  }
+
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .nav-link.active .nav-dot { background: var(--accent); }
+  .nav-link:hover .nav-dot { background: var(--text-dim); }
+
+  /* MAIN CONTENT */
+  .main {
+    margin-left: 260px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 80px 64px 60px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(249,115,22,0.05) 0%, transparent 50%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: 'AQE';
+    position: absolute;
+    right: 64px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Syne', sans-serif;
+    font-size: 160px;
+    font-weight: 800;
+    color: rgba(249,115,22,0.04);
+    letter-spacing: -4px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    background: var(--tag-blue);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(56,189,248,0.2);
+    margin-bottom: 20px;
+    letter-spacing: 0.08em;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+    max-width: 600px;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-desc {
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 580px;
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .hero-pills {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .pill-orange { background: var(--tag-orange); color: var(--accent); border: 1px solid rgba(249,115,22,0.25); }
+  .pill-blue { background: var(--tag-blue); color: var(--accent2); border: 1px solid rgba(56,189,248,0.25); }
+  .pill-purple { background: var(--tag-purple); color: var(--accent3); border: 1px solid rgba(167,139,250,0.25); }
+  .pill-green { background: var(--tag-green); color: var(--accent4); border: 1px solid rgba(52,211,153,0.25); }
+
+  /* CONTENT AREA */
+  .content {
+    padding: 0 64px 80px;
+  }
+
+  /* SECTION */
+  .section {
+    padding: 64px 0 0;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-number::after {
+    content: '';
+    flex: 0 0 40px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  .section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 20px;
+    color: var(--text);
+    line-height: 1.15;
+  }
+
+  .section h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin: 36px 0 12px;
+  }
+
+  .section h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin: 28px 0 10px;
+  }
+
+  .section p {
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    max-width: 720px;
+  }
+
+  .section p strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* CALLOUT BOXES */
+  .callout {
+    border-left: 3px solid;
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 24px 0;
+    max-width: 720px;
+  }
+  .callout-orange { border-color: var(--accent); background: var(--tag-orange); }
+  .callout-blue { border-color: var(--accent2); background: var(--tag-blue); }
+  .callout-green { border-color: var(--accent4); background: var(--tag-green); }
+  .callout-purple { border-color: var(--accent3); background: var(--tag-purple); }
+
+  .callout-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .callout-orange .callout-label { color: var(--accent); }
+  .callout-blue .callout-label { color: var(--accent2); }
+  .callout-green .callout-label { color: var(--accent4); }
+  .callout-purple .callout-label { color: var(--accent3); }
+
+  .callout p { color: var(--text-dim); margin: 0; max-width: 100%; font-size: 14px; }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+    max-width: 740px;
+    position: relative;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+  }
+
+  .code-dots {
+    display: flex;
+    gap: 5px;
+  }
+
+  .code-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .code-block pre {
+    padding: 20px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c9d1d9;
+  }
+
+  .code-block pre .kw { color: #ff7b72; }
+  .code-block pre .str { color: #a5d6ff; }
+  .code-block pre .fn { color: #d2a8ff; }
+  .code-block pre .comment { color: #5a6d82; font-style: italic; }
+  .code-block pre .num { color: #f2cc60; }
+  .code-block pre .op { color: #e06c75; }
+
+  /* DIAGRAM / ASCII */
+  .diagram {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 20px 0;
+    max-width: 740px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #7dd3fc;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* TABLES */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 24px 0;
+    max-width: 740px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: var(--code-bg);
+  }
+
+  thead tr {
+    background: var(--surface2);
+  }
+
+  th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 12px 16px;
+    color: var(--text-dim);
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  td code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    background: var(--tag-blue);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  td strong { color: var(--text); font-weight: 600; }
+
+  /* FLOW STEPS */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 600px;
+    margin: 24px 0;
+  }
+
+  .flow-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .flow-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .flow-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .flow-line {
+    width: 1px;
+    flex: 1;
+    background: var(--border);
+    min-height: 28px;
+    margin: 4px 0;
+  }
+
+  .flow-body {
+    padding: 4px 0 28px;
+  }
+
+  .flow-body strong {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .flow-body p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 100%;
+  }
+
+  /* FEATURE GRID */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 28px 0;
+    max-width: 740px;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: border-color 0.2s ease;
+  }
+
+  .feature-card:hover { border-color: var(--accent); }
+
+  .feature-icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+
+  .feature-card h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 6px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .feature-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 100%;
+    line-height: 1.6;
+  }
+
+  /* INLINE CODE */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    background: var(--tag-blue);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* TOC at top */
+  .toc-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin: 48px 0 0;
+    max-width: 740px;
+  }
+
+  .toc-card h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 16px;
+  }
+
+  .toc-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+  }
+
+  .toc-list li a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.15s ease;
+  }
+
+  .toc-list li a:hover { color: var(--accent); }
+
+  .toc-list li a::before {
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .hero { padding: 48px 28px 40px; }
+    .hero::after { display: none; }
+    .hero h1 { font-size: 36px; }
+    .content { padding: 0 28px 60px; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .toc-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">Apache Spark</div>
+    <div class="sidebar-title">AQE Deep Dive</div>
+    <div class="sidebar-version">Spark 3.x</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-link active" href="#overview"><span class="nav-dot"></span>Introduction</a>
+    <a class="nav-link" href="#how-it-works"><span class="nav-dot"></span>How It Works</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Core Features</div>
+    <a class="nav-link" href="#coalescing"><span class="nav-dot"></span>Partition Coalescing</a>
+    <a class="nav-link" href="#join-strategy"><span class="nav-dot"></span>Join Strategy</a>
+    <a class="nav-link" href="#skew-join"><span class="nav-dot"></span>Skew Join</a>
+    <a class="nav-link" href="#dpp"><span class="nav-dot"></span>Partition Pruning</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Reference</div>
+    <a class="nav-link" href="#internals"><span class="nav-dot"></span>AQE Internals</a>
+    <a class="nav-link" href="#tuning"><span class="nav-dot"></span>Tuning Guide</a>
+    <a class="nav-link" href="#comparison"><span class="nav-dot"></span>AQE vs Manual</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO -->
+  <section class="hero" id="overview">
+    <div class="hero-tag">⚡ Runtime Optimization</div>
+    <h1>Adaptive Query<br><span>Execution</span></h1>
+    <p class="hero-desc">
+      AQE is Spark's self-healing query optimizer — it re-optimizes query plans at runtime using real statistics, eliminating the guesswork of static planning.
+    </p>
+    <div class="hero-pills">
+      <span class="pill pill-orange">Introduced: Spark 3.0</span>
+      <span class="pill pill-blue">Default ON: Spark 3.2+</span>
+      <span class="pill pill-green">Stage-boundary driven</span>
+      <span class="pill pill-purple">4 Core Features</span>
+    </div>
+  </section>
+
+  <div class="content">
+
+    <!-- TOC -->
+    <div class="toc-card" id="how-it-works">
+      <h3>Contents</h3>
+      <ul class="toc-list">
+        <li><a href="#coalescing">1. Dynamic Partition Coalescing</a></li>
+        <li><a href="#join-strategy">2. Join Strategy Switching</a></li>
+        <li><a href="#skew-join">3. Skew Join Optimization</a></li>
+        <li><a href="#dpp">4. Dynamic Partition Pruning</a></li>
+        <li><a href="#internals">5. AQE Internals & Rules</a></li>
+        <li><a href="#tuning">6. Tuning Guide</a></li>
+      </ul>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section">
+      <div class="section-number">00 — CORE CONCEPT</div>
+      <h2>How AQE Works</h2>
+      <p>Traditional Spark plans queries entirely upfront based on estimated statistics. AQE breaks the query into <strong>stages separated by shuffles</strong>, and at each boundary it inspects actual runtime statistics before deciding the next move.</p>
+
+      <div class="callout callout-blue">
+        <div class="callout-label">💡 Key Insight</div>
+        <p>AQE doesn't change how Spark runs — it changes what plan Spark runs, mid-execution, using real data instead of guesses.</p>
+      </div>
+
+      <div class="diagram">Stage 1 Executes
+      ↓
+Map Output Statistics collected
+(actual partition sizes, row counts)
+      ↓
+AQE re-optimization rules fire:
+  ├─ CoalesceShufflePartitions
+  ├─ OptimizeSkewedJoin
+  ├─ OptimizeLocalShuffleReader
+  └─ DemoteBroadcastHashJoin
+      ↓
+Rewritten plan submitted for Stage 2
+      ↓
+Stage 2 Executes (optimally) ✓</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 1: COALESCING -->
+    <div class="section" id="coalescing">
+      <div class="section-number">01 — FEATURE</div>
+      <h2>Dynamic Partition Coalescing</h2>
+      <p>The static <code>spark.sql.shuffle.partitions</code> setting creates a fixed number of output partitions. When data is uneven, you end up with either thousands of tiny tasks or a few massive ones.</p>
+
+      <div class="callout callout-orange">
+        <div class="callout-label">⚠️ The Problem</div>
+        <p>Default 200 partitions for all queries — tiny queries get 200 nearly-empty tasks; large queries get 200 overloaded tasks. Either way, performance suffers.</p>
+      </div>
+
+      <h3>Before & After</h3>
+      <div class="diagram">Before Coalescing (200 partitions, target = 128 MB):
+[2MB][3MB][1MB][150MB][2MB][4MB][148MB][1MB][3MB]...
+
+After AQE Coalescing:
+[  6MB merged  ][   150MB   ][   154MB   ]...
+    (3 tasks, right-sized)</div>
+
+      <h3>Configuration</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="code-dot dot-r"></span><span class="code-dot dot-y"></span><span class="code-dot dot-g"></span></div>
+          <span class="code-lang">python / pyspark</span>
+        </div>
+        <pre><span class="comment"># Enable partition coalescing</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.coalescePartitions.enabled"</span>, <span class="str">"true"</span>)
+
+<span class="comment"># Target size per coalesced partition</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.advisoryPartitionSizeInBytes"</span>, <span class="str">"128MB"</span>)
+
+<span class="comment"># Safety floor — never go below this count</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.coalescePartitions.minPartitionNum"</span>, <span class="str">"1"</span>)
+
+<span class="comment"># Start high — AQE will reduce it dynamically</span>
+spark.conf.set(<span class="str">"spark.sql.shuffle.partitions"</span>, <span class="str">"1000"</span>)</pre>
+      </div>
+
+      <h4>How the Merging Works</h4>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">1</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Stage completes</strong><p>Spark collects map output sizes from all shuffle map tasks.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">2</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Statistics read</strong><p>AQE inspects actual byte size of every shuffle partition.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">3</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Greedy bin-packing</strong><p>Adjacent partitions merged left-to-right until <code>advisoryPartitionSizeInBytes</code> is reached.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">4</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Next stage launches</strong><p>With far fewer, right-sized partitions. No re-shuffle needed.</p></div>
+        </div>
+      </div>
+
+      <div class="callout callout-green">
+        <div class="callout-label">✅ Tuning Tip</div>
+        <p>Set <code>spark.sql.shuffle.partitions</code> high (500–2000). AQE will coalesce down. Starting too low means AQE has no room to consolidate.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 2: JOIN STRATEGY -->
+    <div class="section" id="join-strategy">
+      <div class="section-number">02 — FEATURE</div>
+      <h2>Dynamic Join Strategy Switching</h2>
+      <p>Spark picks a join strategy before execution based on estimated table sizes. If those estimates are wrong — stale stats, no <code>ANALYZE TABLE</code> run — the wrong strategy executes. AQE fixes this at runtime.</p>
+
+      <h3>Join Strategy Comparison</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Strategy</th><th>When Used</th><th>Shuffle?</th><th>Memory</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Broadcast Hash Join</strong></td><td>One side fits in executor memory</td><td>❌ No</td><td>High (all executors)</td></tr>
+            <tr><td><strong>Sort-Merge Join</strong></td><td>Both sides large</td><td>✅ Both sides</td><td>Moderate</td></tr>
+            <tr><td><strong>Shuffle Hash Join</strong></td><td>Medium tables</td><td>✅ One side</td><td>Moderate</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Runtime Switching Flow</h3>
+      <div class="diagram">Pre-execution plan: SortMergeJoin
+  (estimated left=500MB, right=800MB)
+                ↓
+Stage 1 (left side) materializes
+                ↓
+AQE checks actual size: 6 MB ← much smaller!
+                ↓
+DemoteBroadcastHashJoin rule fires
+                ↓
+Plan rewritten → BroadcastHashJoin ✓
+  (no sort, no merge, no re-shuffle)</div>
+
+      <h3>Configuration</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="code-dot dot-r"></span><span class="code-dot dot-y"></span><span class="code-dot dot-g"></span></div>
+          <span class="code-lang">python / pyspark</span>
+        </div>
+        <pre><span class="comment"># AQE's runtime broadcast threshold</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.autoBroadcastJoinThreshold"</span>, <span class="str">"30MB"</span>)
+
+<span class="comment"># Allow local shuffle read optimization</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.localShuffleReader.enabled"</span>, <span class="str">"true"</span>)
+
+<span class="comment"># Static threshold (pre-execution — set conservatively)</span>
+spark.conf.set(<span class="str">"spark.sql.autoBroadcastJoinThreshold"</span>, <span class="str">"10MB"</span>)</pre>
+      </div>
+
+      <div class="callout callout-purple">
+        <div class="callout-label">🔍 Verify in Spark UI</div>
+        <p>Look for <code>*(AQE)</code> prefix on plan nodes in the SQL tab. The physical plan will show <code>BroadcastHashJoin</code> even if the optimizer originally chose <code>SortMergeJoin</code>.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 3: SKEW JOIN -->
+    <div class="section" id="skew-join">
+      <div class="section-number">03 — FEATURE</div>
+      <h2>Skew Join Optimization</h2>
+      <p>Data skew is the <strong>#1 cause of slow Spark jobs</strong>. When one partition key dominates, one task processes gigabytes while others finish in seconds — the entire stage waits on that one straggler.</p>
+
+      <div class="callout callout-orange">
+        <div class="callout-label">⚠️ Classic Symptom</div>
+        <p>Stage progress bar stuck at 199/200. One task has been running for 2 hours. All others finished in 3 minutes. This is skew.</p>
+      </div>
+
+      <h3>Skew Detection Formula</h3>
+      <div class="diagram">skewThreshold = MAX(
+    skewedPartitionFactor × median_partition_size,
+    skewedPartitionThresholdInBytes
+)
+
+Example:
+  Median size             = 64 MB
+  skewedPartitionFactor   = 5
+  skewedPartitionThreshold = 256 MB
+
+  skewThreshold = MAX(5 × 64MB, 256MB)
+                = MAX(320MB, 256MB)
+                = 320 MB
+
+→ Any partition > 320 MB is SKEWED</div>
+
+      <h3>How AQE Fixes It</h3>
+      <div class="diagram">BEFORE (SortMergeJoin, skewed):
+
+Left:                          Right:
+[Part-0:  2 MB ] ──────────── [Part-0:  2 MB ]
+[Part-1:  3 MB ] ──────────── [Part-1:  3 MB ]
+[Part-2: 98 GB ] ──────────── [Part-2: 95 GB ]  ← 1 straggler task!
+[Part-3:  1 MB ] ──────────── [Part-3:  1 MB ]
+
+
+AFTER (AQE splits + replicates):
+
+Left:                          Right:
+[Part-0:  2 MB ] ──────────── [Part-0:  2 MB ]
+[Part-1:  3 MB ] ──────────── [Part-1:  3 MB ]
+[Part-2a: 49 GB] ──────────┐  [Part-2: 95 GB ] (replicated copy 1)
+[Part-2b: 49 GB] ─────────┐└─ [Part-2: 95 GB ] (replicated copy 2)
+[Part-3:  1 MB ] ──────────── [Part-3:  1 MB ]
+
+→ 2 parallel tasks instead of 1 monster task ✓</div>
+
+      <h3>Configuration</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="code-dot dot-r"></span><span class="code-dot dot-y"></span><span class="code-dot dot-g"></span></div>
+          <span class="code-lang">python / pyspark</span>
+        </div>
+        <pre><span class="comment"># Enable skew join handling</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.skewJoin.enabled"</span>, <span class="str">"true"</span>)
+
+<span class="comment"># How many × the median before a partition is "skewed"</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.skewJoin.skewedPartitionFactor"</span>, <span class="str">"5"</span>)
+
+<span class="comment"># Minimum absolute size to be considered skewed</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes"</span>, <span class="str">"256MB"</span>)
+
+<span class="comment"># Target size per skew sub-partition (reuses advisory size)</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.advisoryPartitionSizeInBytes"</span>, <span class="str">"64MB"</span>)</pre>
+      </div>
+
+      <h4>Algorithm Step-by-Step</h4>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">1</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Both shuffle stages complete</strong><p>AQE has full partition size data for both sides of the join.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">2</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Median computed</strong><p>Separately for each join side. Threshold calculated using the formula above.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">3</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Skewed partitions identified</strong><p>Any partition on either side exceeding the threshold is flagged.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">4</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Split & replicate</strong><p>Skewed partition split into N sub-partitions (size ÷ advisorySize). Matching partition on the other side replicated N times.</p></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-left"><div class="flow-num">5</div><div class="flow-line"></div></div>
+          <div class="flow-body"><strong>Join plan rewritten</strong><p>N parallel tasks execute instead of 1 straggler. Stage completes in fraction of original time.</p></div>
+        </div>
+      </div>
+
+      <div class="callout callout-blue">
+        <div class="callout-label">⚠️ Limitation</div>
+        <p>Skew optimization only applies to <strong>Sort-Merge Joins</strong>. It does not work on Broadcast Hash Joins (those have no shuffle to split).</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 4: DPP -->
+    <div class="section" id="dpp">
+      <div class="section-number">04 — FEATURE</div>
+      <h2>Dynamic Partition Pruning</h2>
+      <p>DPP avoids scanning irrelevant partitions of a large fact table by pushing filter results from a dimension table at runtime — a critical optimization for star-schema / data warehouse queries.</p>
+
+      <h3>Example Query</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="code-dot dot-r"></span><span class="code-dot dot-y"></span><span class="code-dot dot-g"></span></div>
+          <span class="code-lang">sql</span>
+        </div>
+        <pre><span class="kw">SELECT</span> f.*, d.region
+<span class="kw">FROM</span>   fact_sales f
+<span class="kw">JOIN</span>   dim_date d <span class="kw">ON</span> f.date_id = d.date_id
+<span class="kw">WHERE</span>  d.year = <span class="num">2024</span>
+
+<span class="comment">-- Without DPP: full scan of fact_sales (100s of partitions)
+-- With DPP:    only 2024 partitions of fact_sales scanned ✓</span></pre>
+      </div>
+
+      <h3>How DPP Works</h3>
+      <div class="diagram">1. Filter dim_date WHERE year = 2024
+   → produces set of matching date_ids: {20240101, 20240102, ...}
+                    ↓
+2. Result injected as a runtime subquery filter into fact_sales scan
+                    ↓
+3. Only fact_sales partitions WHERE date_id IN (20240101, ...) read
+                    ↓
+4. I/O reduced from 100% → ~8% of the table ✓</div>
+
+      <h3>Configuration</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="code-dot dot-r"></span><span class="code-dot dot-y"></span><span class="code-dot dot-g"></span></div>
+          <span class="code-lang">python / pyspark</span>
+        </div>
+        <pre><span class="comment"># Enable Dynamic Partition Pruning</span>
+spark.conf.set(<span class="str">"spark.sql.optimizer.dynamicPartitionPruning.enabled"</span>, <span class="str">"true"</span>)
+
+<span class="comment"># Reuse broadcast result for pruning (avoids re-scanning dim table)</span>
+spark.conf.set(<span class="str">"spark.sql.optimizer.dynamicPartitionPruning.reuseBroadcastOnly"</span>, <span class="str">"true"</span>)</pre>
+      </div>
+
+      <h4>Requirements for DPP to Activate</h4>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🗂️</div>
+          <h4>Fact table must be partitioned</h4>
+          <p>DPP prunes physical partitions on disk. Unpartitioned tables see no benefit.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📡</div>
+          <h4>Dimension side uses broadcast</h4>
+          <p>DPP reuses the broadcast result to avoid re-scanning the dimension table.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔑</div>
+          <h4>Join key = partition key</h4>
+          <p>The join column on the fact table must match the partition column.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h4>Filter on dimension side</h4>
+          <p>The WHERE clause must filter the dimension, not the fact table directly.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 5: INTERNALS -->
+    <div class="section" id="internals">
+      <div class="section-number">05 — INTERNALS</div>
+      <h2>AQE Internals & Rule Engine</h2>
+      <p>AQE wraps the physical plan in an <code>AdaptiveSparkPlanExec</code> node and creates <code>QueryStageExec</code> boundaries at every shuffle and broadcast exchange.</p>
+
+      <h3>Plan Wrapping Flow</h3>
+      <div class="diagram">LogicalPlan
+    ↓  (standard Catalyst optimization)
+SparkPlan
+    ↓
+InsertAdaptiveSparkPlan rule
+    ↓
+AdaptiveSparkPlanExec (root)
+    ├── ShuffleQueryStageExec (boundary 1)
+    ├── ShuffleQueryStageExec (boundary 2)
+    └── BroadcastQueryStageExec (boundary 3)
+
+Each stage materializes independently.
+After each: re-optimization rules fire on the remainder.</div>
+
+      <h3>Re-optimization Rules</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rule</th><th>Triggers When</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><code>CoalesceShufflePartitions</code></td><td>After any shuffle stage</td><td>Merges small adjacent partitions</td></tr>
+            <tr><td><code>OptimizeSkewedJoin</code></td><td>Before a SMJ with skewed input</td><td>Splits + replicates skewed partitions</td></tr>
+            <tr><td><code>OptimizeLocalShuffleReader</code></td><td>After broadcast decision</td><td>Avoids network shuffle via local read</td></tr>
+            <tr><td><code>DemoteBroadcastHashJoin</code></td><td>Actual size > threshold</td><td>Reverts BHJ → SMJ to prevent OOM</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-purple">
+        <div class="callout-label">🔬 Note</div>
+        <p>AQE only activates at shuffle/broadcast boundaries. Single-stage queries (no shuffles) receive no AQE benefit. Consider adding a <code>repartition()</code> to introduce a stage boundary if needed.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 6: TUNING -->
+    <div class="section" id="tuning">
+      <div class="section-number">06 — REFERENCE</div>
+      <h2>Tuning Guide & Best Practices</h2>
+
+      <h3>Recommended Baseline Config</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <div class="code-dots"><span class="code-dot dot-r"></span><span class="code-dot dot-y"></span><span class="code-dot dot-g"></span></div>
+          <span class="code-lang">python / pyspark — production baseline</span>
+        </div>
+        <pre><span class="comment"># Master switches</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.enabled"</span>,                         <span class="str">"true"</span>)
+spark.conf.set(<span class="str">"spark.sql.adaptive.coalescePartitions.enabled"</span>,      <span class="str">"true"</span>)
+spark.conf.set(<span class="str">"spark.sql.adaptive.skewJoin.enabled"</span>,               <span class="str">"true"</span>)
+
+<span class="comment"># Partition sizing</span>
+spark.conf.set(<span class="str">"spark.sql.shuffle.partitions"</span>,                       <span class="str">"1000"</span>)
+spark.conf.set(<span class="str">"spark.sql.adaptive.advisoryPartitionSizeInBytes"</span>,    <span class="str">"128MB"</span>)
+
+<span class="comment"># Join strategy</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.autoBroadcastJoinThreshold"</span>,      <span class="str">"30MB"</span>)
+spark.conf.set(<span class="str">"spark.sql.autoBroadcastJoinThreshold"</span>,              <span class="str">"10MB"</span>)
+
+<span class="comment"># Skew detection thresholds</span>
+spark.conf.set(<span class="str">"spark.sql.adaptive.skewJoin.skewedPartitionFactor"</span>,              <span class="str">"5"</span>)
+spark.conf.set(<span class="str">"spark.sql.adaptive.skewJoin.skewedPartitionThresholdInBytes"</span>,   <span class="str">"256MB"</span>)</pre>
+      </div>
+
+      <h3>Troubleshooting Reference</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td>One task runs forever</td><td>Skew not detected</td><td>Lower <code>skewedPartitionFactor</code> or threshold</td></tr>
+            <tr><td>Thousands of tiny tasks</td><td>Coalescing not aggressive enough</td><td>Increase <code>advisoryPartitionSizeInBytes</code></td></tr>
+            <tr><td>Executor OOM</td><td>Broadcast join on large table</td><td>Lower <code>autoBroadcastJoinThreshold</code></td></tr>
+            <tr><td>AQE not activating</td><td>Single-stage query (no shuffles)</td><td>Add <code>repartition()</code> or redesign query</td></tr>
+            <tr><td>Skew fix not applied</td><td>Not a Sort-Merge Join</td><td>Only works on SMJ; check join type in plan</td></tr>
+            <tr><td>Plan overhead on short queries</td><td>AQE adds stage boundary latency</td><td>Disable AQE for sub-second queries</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SECTION 7: COMPARISON -->
+    <div class="section" id="comparison">
+      <div class="section-number">07 — REFERENCE</div>
+      <h2>AQE vs. Manual Optimization</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Scenario</th><th>Without AQE</th><th>With AQE</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Skewed join</strong></td>
+              <td>Manually salt keys, add <code>SKEW HINT</code>, rewrite ETL</td>
+              <td>✅ Auto-detected & split at runtime</td>
+            </tr>
+            <tr>
+              <td><strong>Wrong partition count</strong></td>
+              <td>Tune <code>shuffle.partitions</code> per query per cluster size</td>
+              <td>✅ Auto-coalesced based on actual data</td>
+            </tr>
+            <tr>
+              <td><strong>Bad join decision</strong></td>
+              <td>Force with <code>BROADCAST</code> hint, risk OOM</td>
+              <td>✅ Runtime switch if estimates were wrong</td>
+            </tr>
+            <tr>
+              <td><strong>Partition pruning</strong></td>
+              <td>Must partition table AND write DPP-aware SQL</td>
+              <td>✅ Automatic with DPP flag + correct schema</td>
+            </tr>
+            <tr>
+              <td><strong>Variable data sizes</strong></td>
+              <td>Re-tune configs every time data grows</td>
+              <td>✅ Self-adjusting every query</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-green">
+        <div class="callout-label">✅ Summary</div>
+        <p>AQE is Spark's self-healing optimizer. The less you know about your data distribution upfront, the more value AQE provides. Enable it, set a high shuffle partition count, and let runtime statistics do the work.</p>
+      </div>
+    </div>
+
+    <div style="height: 80px;"></div>
+  </div>
+</main>
+
+<script>
+  // Active nav highlight on scroll
+  const sections = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + entry.target.id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(section => observer.observe(section));
+
+  // Smooth scroll
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+
+</body>
+</html>

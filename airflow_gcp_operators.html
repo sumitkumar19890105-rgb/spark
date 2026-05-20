@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airflow GCP Operators - Data Engineering Reference</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            color: #222222;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #0066cc;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        .section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .section h2 {
+            color: #d63384;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .operator {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #0066cc;
+            border: 1px solid #e9ecef;
+            border-left: 4px solid #0066cc;
+        }
+        .operator h3 {
+            color: #0066cc;
+            font-size: 1.2em;
+            margin-bottom: 8px;
+        }
+        .operator .usecase {
+            color: #198754;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        pre {
+            background: #1e1e1e;
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #333;
+        }
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #a8d8ea;
+        }
+        .keyword { color: #c792ea; }
+        .string { color: #c3e88d; }
+        .func { color: #82aaff; }
+        .comment { color: #546e7a; font-style: italic; }
+        .param { color: #f78c6c; }
+        .dag-pattern {
+            background: #1e1e1e;
+            border: 2px solid #198754;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #4ecca3;
+        }
+        .toc {
+            background: #f0f4ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #c9d6ff;
+        }
+        .toc h2 { color: #d63384; margin-bottom: 15px; }
+        .toc ul { list-style: none; columns: 1; }
+        .toc li {
+            padding: 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .toc a {
+            color: #0066cc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .toc a:hover { color: #198754; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .badge-operator { background: #e7f5ff; color: #0066cc; border: 1px solid #0066cc; }
+        .badge-sensor { background: #e6fcf5; color: #198754; border: 1px solid #198754; }
+        .badge-hook { background: #fff0f6; color: #d63384; border: 1px solid #d63384; }
+        .badge-exception { background: #fff4e6; color: #e8590c; border: 1px solid #e8590c; }
+        /* TOC expandable styles */
+        .toc-item {
+            margin-bottom: 2px;
+        }
+        .toc-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .toc-header:hover { background: #dbe4ff; }
+        .toc-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+            flex-shrink: 0;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .toc-toggle:hover { background: #0052a3; }
+        .toc-toggle.expanded { background: #198754; transform: rotate(45deg); }
+        .toc-sub {
+            display: none;
+            margin-left: 44px;
+            padding: 5px 0 10px;
+        }
+        .toc-sub.show { display: block; }
+        .toc-sub li {
+            padding: 4px 8px;
+            font-size: 0.9em;
+            color: #444;
+            border-bottom: none;
+            border-left: 2px solid #dee2e6;
+            margin-bottom: 2px;
+        }
+        .toc-sub li a { color: #495057; font-size: 0.95em; }
+        .toc-sub li a:hover { color: #0066cc; }
+        @media (max-width: 768px) {
+            .toc ul { columns: 1; }
+            body { padding: 10px; }
+        }
+        /* Print / PDF styles */
+        @media print {
+            .toolbar { display: none !important; }
+            .add-block { display: none !important; }
+            .delete-btn { display: none !important; }
+            body { padding-top: 0 !important; background: white !important; }
+            [contenteditable="true"] { outline: none !important; }
+            .toc-toggle { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .section { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+            .operator { break-inside: avoid; }
+            pre { white-space: pre-wrap; word-wrap: break-word; }
+        }
+        /* Editable toolbar styles */
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1a365d;
+            padding: 10px 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-bottom: 2px solid #0066cc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .toolbar button {
+            background: #0066cc;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+        .toolbar button:hover { background: #198754; }
+        .toolbar button.danger { background: #dc3545; color: white; }
+        .toolbar button.danger:hover { background: #ff6b6b; }
+        .toolbar .status {
+            margin-left: auto;
+            color: #a3e635;
+            font-size: 0.85em;
+        }
+        body { padding-top: 70px; }
+        [contenteditable="true"]:focus {
+            outline: 2px dashed #00d4ff;
+            outline-offset: 4px;
+        }
+        .add-block {
+            background: transparent;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            color: #888;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        .add-block:hover {
+            border-color: #0066cc;
+            color: #0066cc;
+        }
+        .delete-btn {
+            float: right;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .operator:hover .delete-btn,
+        .section:hover > .delete-btn { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<!-- Editable Toolbar -->
+<div class="toolbar">
+    <button onclick="addSection()">+ Add Section</button>
+    <button onclick="addOperator()">+ Add Operator</button>
+    <button onclick="addNote()">+ Add Note</button>
+    <button onclick="saveContent()">💾 Save</button>
+    <button onclick="exportHTML()">📥 Export</button>
+    <button onclick="saveAsPDF()">📄 Save as PDF</button>
+    <button class="danger" onclick="resetContent()">↺ Reset</button>
+    <span class="status" id="status">Click any text to edit</span>
+</div>
+
+<h1>Airflow GCP Operators Reference</h1>
+<p class="subtitle">Complete Guide for GCP Data Engineering Pipelines</p>
+
+<!-- Table of Contents -->
+<div class="toc">
+    <h2>Table of Contents</h2>
+    <ul>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#bigquery">1. BigQuery Operators</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#bigquery">BigQueryInsertJobOperator</a></li>
+                <li><a href="#bigquery">BigQueryGetDataOperator</a></li>
+                <li><a href="#bigquery">BigQueryCheckOperator</a></li>
+                <li><a href="#bigquery">BigQueryValueCheckOperator</a></li>
+                <li><a href="#bigquery">BigQueryCreateEmptyTableOperator</a></li>
+                <li><a href="#bigquery">BigQueryDeleteTableOperator</a></li>
+                <li><a href="#bigquery">BigQueryCreateExternalTableOperator</a></li>
+                <li><a href="#bigquery">BigQueryTableExistenceSensor</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#gcs">2. GCS Operators</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#gcs">GCSToBigQueryOperator</a></li>
+                <li><a href="#gcs">GCSToGCSOperator</a></li>
+                <li><a href="#gcs">GCSObjectExistenceSensor</a></li>
+                <li><a href="#gcs">GCSObjectsWithPrefixExistenceSensor</a></li>
+                <li><a href="#gcs">GCSListObjectsOperator</a></li>
+                <li><a href="#gcs">GCSCreateBucketOperator</a></li>
+                <li><a href="#gcs">GCSDeleteObjectsOperator</a></li>
+                <li><a href="#gcs">GCSHook</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#dataproc">3. Dataproc Operators</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#dataproc">DataprocCreateClusterOperator</a></li>
+                <li><a href="#dataproc">DataprocSubmitJobOperator</a></li>
+                <li><a href="#dataproc">DataprocDeleteClusterOperator</a></li>
+                <li><a href="#dataproc">DataprocCreateBatchOperator</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#dataflow">4. Dataflow Operators</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#dataflow">DataflowStartFlexTemplateOperator</a></li>
+                <li><a href="#dataflow">DataflowTemplatedJobStartOperator</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#pubsub">5. PubSub Operators</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#pubsub">PubSubPublishMessageOperator</a></li>
+                <li><a href="#pubsub">PubSubPullSensor</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#core">6. Core / Utility Operators</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#core">PythonOperator</a></li>
+                <li><a href="#core">BranchPythonOperator</a></li>
+                <li><a href="#core">ShortCircuitOperator</a></li>
+                <li><a href="#core">TriggerDagRunOperator</a></li>
+                <li><a href="#core">ExternalTaskSensor</a></li>
+                <li><a href="#core">BashOperator</a></li>
+                <li><a href="#core">EmptyOperator</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#exceptions">7. Exceptions &amp; State</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#exceptions">AirflowFailException</a></li>
+                <li><a href="#exceptions">AirflowSkipException</a></li>
+                <li><a href="#exceptions">DagRunState</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#cloudsql">8. Cloud SQL</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#cloudsql">CloudSQLExportInstanceOperator</a></li>
+                <li><a href="#cloudsql">CloudSQLImportInstanceOperator</a></li>
+            </ul>
+        </li>
+        <li class="toc-item">
+            <div class="toc-header" onclick="toggleToc(this)">
+                <button class="toc-toggle">+</button>
+                <a href="#pattern">9. Typical DAG Pattern</a>
+            </div>
+            <ul class="toc-sub">
+                <li><a href="#pattern">Complete DAG Example</a></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<!-- BigQuery Section -->
+<div class="section" id="bigquery">
+    <h2>BigQuery Operators</h2>
+
+    <div class="operator">
+        <h3>BigQueryInsertJobOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Run any BQ job (query, load, extract, copy). Most flexible BQ operator.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.bigquery <span class="keyword">import</span> BigQueryInsertJobOperator
+
+BigQueryInsertJobOperator(
+    task_id=<span class="string">"run_query"</span>,
+    configuration={
+        <span class="string">"query"</span>: {
+            <span class="string">"query"</span>: <span class="string">"SELECT * FROM `project.dataset.table` WHERE date = '{{ ds }}'"</span>,
+            <span class="string">"useLegacySql"</span>: <span class="param">False</span>,
+            <span class="string">"destinationTable"</span>: {
+                <span class="string">"projectId"</span>: <span class="string">"my-project"</span>,
+                <span class="string">"datasetId"</span>: <span class="string">"my_dataset"</span>,
+                <span class="string">"tableId"</span>: <span class="string">"target_table"</span>
+            },
+            <span class="string">"writeDisposition"</span>: <span class="string">"WRITE_TRUNCATE"</span>
+        }
+    }
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BigQueryGetDataOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Fetch rows from a BQ table and push to XCom for downstream tasks.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.bigquery <span class="keyword">import</span> BigQueryGetDataOperator
+
+BigQueryGetDataOperator(
+    task_id=<span class="string">"get_data"</span>,
+    dataset_id=<span class="string">"my_dataset"</span>,
+    table_id=<span class="string">"config_table"</span>,
+    max_results=<span class="param">100</span>,
+    selected_fields=<span class="string">"col1,col2"</span>
+)
+<span class="comment"># Access in downstream: ti.xcom_pull(task_ids='get_data')</span></code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BigQueryCheckOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Data quality check – fails if query returns no rows or falsy result.</p>
+        <pre><code>BigQueryCheckOperator(
+    task_id=<span class="string">"check_row_count"</span>,
+    sql=<span class="string">"SELECT COUNT(*) FROM `project.dataset.table` WHERE date = '{{ ds }}'"</span>,
+    use_legacy_sql=<span class="param">False</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BigQueryValueCheckOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Validate query result matches expected value (within tolerance).</p>
+        <pre><code>BigQueryValueCheckOperator(
+    task_id=<span class="string">"check_total"</span>,
+    sql=<span class="string">"SELECT SUM(amount) FROM `project.dataset.sales`"</span>,
+    pass_value=<span class="param">1000000</span>,
+    tolerance=<span class="param">0.1</span>,  <span class="comment"># 10% tolerance</span>
+    use_legacy_sql=<span class="param">False</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BigQueryCreateEmptyTableOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Create a table with schema before loading data.</p>
+        <pre><code>BigQueryCreateEmptyTableOperator(
+    task_id=<span class="string">"create_table"</span>,
+    dataset_id=<span class="string">"my_dataset"</span>,
+    table_id=<span class="string">"new_table"</span>,
+    schema_fields=[
+        {<span class="string">"name"</span>: <span class="string">"id"</span>, <span class="string">"type"</span>: <span class="string">"INTEGER"</span>, <span class="string">"mode"</span>: <span class="string">"REQUIRED"</span>},
+        {<span class="string">"name"</span>: <span class="string">"name"</span>, <span class="string">"type"</span>: <span class="string">"STRING"</span>, <span class="string">"mode"</span>: <span class="string">"NULLABLE"</span>},
+    ]
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BigQueryDeleteTableOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Drop temp/staging tables after pipeline completes.</p>
+        <pre><code>BigQueryDeleteTableOperator(
+    task_id=<span class="string">"delete_staging"</span>,
+    deletion_dataset_table=<span class="string">"project.dataset.staging_table"</span>,
+    ignore_if_missing=<span class="param">True</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BigQueryCreateExternalTableOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Create external table on top of GCS files (no data movement).</p>
+        <pre><code>BigQueryCreateExternalTableOperator(
+    task_id=<span class="string">"create_external"</span>,
+    table_resource={
+        <span class="string">"tableReference"</span>: {<span class="string">"tableId"</span>: <span class="string">"ext_table"</span>, <span class="string">"datasetId"</span>: <span class="string">"raw"</span>},
+        <span class="string">"externalDataConfiguration"</span>: {
+            <span class="string">"sourceUris"</span>: [<span class="string">"gs://bucket/data/*.parquet"</span>],
+            <span class="string">"sourceFormat"</span>: <span class="string">"PARQUET"</span>
+        }
+    }
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BigQueryTableExistenceSensor <span class="badge badge-sensor">Sensor</span></h3>
+        <p class="usecase">Use case: Wait for an upstream table to be created before proceeding.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.sensors.bigquery <span class="keyword">import</span> BigQueryTableExistenceSensor
+
+BigQueryTableExistenceSensor(
+    task_id=<span class="string">"wait_for_table"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    dataset_id=<span class="string">"my_dataset"</span>,
+    table_id=<span class="string">"upstream_table"</span>,
+    poke_interval=<span class="param">60</span>,
+    timeout=<span class="param">3600</span>
+)</code></pre>
+    </div>
+</div>
+
+<!-- GCS Section -->
+<div class="section" id="gcs">
+    <h2>GCS (Google Cloud Storage) Operators</h2>
+
+    <div class="operator">
+        <h3>GCSToBigQueryOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Load files from GCS directly into BigQuery.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.transfers.gcs_to_bigquery <span class="keyword">import</span> GCSToBigQueryOperator
+
+GCSToBigQueryOperator(
+    task_id=<span class="string">"load_to_bq"</span>,
+    bucket=<span class="string">"my-bucket"</span>,
+    source_objects=[<span class="string">"data/{{ ds }}/*.csv"</span>],
+    destination_project_dataset_table=<span class="string">"project.dataset.table"</span>,
+    source_format=<span class="string">"CSV"</span>,
+    skip_leading_rows=<span class="param">1</span>,
+    write_disposition=<span class="string">"WRITE_TRUNCATE"</span>,
+    autodetect=<span class="param">True</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>GCSToGCSOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Move/copy files between buckets (e.g., raw → processed).</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.transfers.gcs_to_gcs <span class="keyword">import</span> GCSToGCSOperator
+
+GCSToGCSOperator(
+    task_id=<span class="string">"archive_files"</span>,
+    source_bucket=<span class="string">"raw-bucket"</span>,
+    source_object=<span class="string">"incoming/*.csv"</span>,
+    destination_bucket=<span class="string">"archive-bucket"</span>,
+    destination_object=<span class="string">"processed/{{ ds }}/"</span>,
+    move_object=<span class="param">True</span>  <span class="comment"># deletes source after copy</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>GCSObjectExistenceSensor <span class="badge badge-sensor">Sensor</span></h3>
+        <p class="usecase">Use case: Wait for a file to land in GCS before processing.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.sensors.gcs <span class="keyword">import</span> GCSObjectExistenceSensor
+
+GCSObjectExistenceSensor(
+    task_id=<span class="string">"wait_for_file"</span>,
+    bucket=<span class="string">"landing-bucket"</span>,
+    object=<span class="string">"daily_feed/{{ ds }}/data.csv"</span>,
+    poke_interval=<span class="param">300</span>,
+    timeout=<span class="param">7200</span>,
+    mode=<span class="string">"reschedule"</span>  <span class="comment"># free up worker slot while waiting</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>GCSObjectsWithPrefixExistenceSensor <span class="badge badge-sensor">Sensor</span></h3>
+        <p class="usecase">Use case: Wait for any files with a given prefix (e.g., _SUCCESS marker).</p>
+        <pre><code>GCSObjectsWithPrefixExistenceSensor(
+    task_id=<span class="string">"wait_for_success"</span>,
+    bucket=<span class="string">"output-bucket"</span>,
+    prefix=<span class="string">"results/{{ ds }}/_SUCCESS"</span>,
+    poke_interval=<span class="param">120</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>GCSListObjectsOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: List files in a bucket path, push to XCom for dynamic processing.</p>
+        <pre><code>GCSListObjectsOperator(
+    task_id=<span class="string">"list_files"</span>,
+    bucket=<span class="string">"my-bucket"</span>,
+    prefix=<span class="string">"incoming/{{ ds }}/"</span>,
+    delimiter=<span class="string">".csv"</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>GCSCreateBucketOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Create a bucket as part of environment setup.</p>
+        <pre><code>GCSCreateBucketOperator(
+    task_id=<span class="string">"create_bucket"</span>,
+    bucket_name=<span class="string">"my-new-bucket"</span>,
+    storage_class=<span class="string">"STANDARD"</span>,
+    location=<span class="string">"US"</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>GCSDeleteObjectsOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Clean up temp files after processing.</p>
+        <pre><code>GCSDeleteObjectsOperator(
+    task_id=<span class="string">"cleanup"</span>,
+    bucket_name=<span class="string">"temp-bucket"</span>,
+    prefix=<span class="string">"staging/{{ ds }}/"</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>GCSHook <span class="badge badge-hook">Hook</span></h3>
+        <p class="usecase">Use case: Programmatic GCS access inside PythonOperator.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.hooks.gcs <span class="keyword">import</span> GCSHook
+
+<span class="keyword">def</span> <span class="func">upload_result</span>(**context):
+    hook = GCSHook(gcp_conn_id=<span class="string">"google_cloud_default"</span>)
+    hook.upload(
+        bucket_name=<span class="string">"my-bucket"</span>,
+        object_name=<span class="string">"output.json"</span>,
+        data=<span class="string">'{"status":"done"}'</span>
+    )
+
+PythonOperator(task_id=<span class="string">"upload"</span>, python_callable=upload_result)</code></pre>
+    </div>
+</div>
+
+<!-- Dataproc Section -->
+<div class="section" id="dataproc">
+    <h2>Dataproc Operators</h2>
+
+    <div class="operator">
+        <h3>DataprocCreateClusterOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Spin up an ephemeral Spark cluster.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.dataproc <span class="keyword">import</span> DataprocCreateClusterOperator
+
+DataprocCreateClusterOperator(
+    task_id=<span class="string">"create_cluster"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    region=<span class="string">"us-central1"</span>,
+    cluster_name=<span class="string">"etl-cluster-{{ ds_nodash }}"</span>,
+    cluster_config={
+        <span class="string">"master_config"</span>: {<span class="string">"num_instances"</span>: <span class="param">1</span>, <span class="string">"machine_type_uri"</span>: <span class="string">"n1-standard-4"</span>},
+        <span class="string">"worker_config"</span>: {<span class="string">"num_instances"</span>: <span class="param">2</span>, <span class="string">"machine_type_uri"</span>: <span class="string">"n1-standard-4"</span>},
+        <span class="string">"software_config"</span>: {<span class="string">"image_version"</span>: <span class="string">"2.1-debian11"</span>}
+    }
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>DataprocSubmitJobOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Submit PySpark/Spark/Hive jobs to a Dataproc cluster.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.dataproc <span class="keyword">import</span> DataprocSubmitJobOperator
+
+DataprocSubmitJobOperator(
+    task_id=<span class="string">"run_spark_job"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    region=<span class="string">"us-central1"</span>,
+    job={
+        <span class="string">"reference"</span>: {<span class="string">"project_id"</span>: <span class="string">"my-project"</span>},
+        <span class="string">"placement"</span>: {<span class="string">"cluster_name"</span>: <span class="string">"etl-cluster-{{ ds_nodash }}"</span>},
+        <span class="string">"pyspark_job"</span>: {
+            <span class="string">"main_python_file_uri"</span>: <span class="string">"gs://scripts-bucket/etl/transform.py"</span>,
+            <span class="string">"args"</span>: [<span class="string">"--date"</span>, <span class="string">"{{ ds }}"</span>],
+            <span class="string">"jar_file_uris"</span>: [<span class="string">"gs://jars-bucket/connector.jar"</span>]
+        }
+    }
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>DataprocDeleteClusterOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Tear down cluster after job completes (cost control).</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.dataproc <span class="keyword">import</span> DataprocDeleteClusterOperator
+
+DataprocDeleteClusterOperator(
+    task_id=<span class="string">"delete_cluster"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    region=<span class="string">"us-central1"</span>,
+    cluster_name=<span class="string">"etl-cluster-{{ ds_nodash }}"</span>,
+    trigger_rule=<span class="string">"all_done"</span>  <span class="comment"># delete even if job failed</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>DataprocCreateBatchOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Run serverless Spark (no cluster management needed).</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.dataproc <span class="keyword">import</span> DataprocCreateBatchOperator
+
+DataprocCreateBatchOperator(
+    task_id=<span class="string">"serverless_spark"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    region=<span class="string">"us-central1"</span>,
+    batch_id=<span class="string">"batch-{{ ds_nodash }}"</span>,
+    batch={
+        <span class="string">"pyspark_batch"</span>: {
+            <span class="string">"main_python_file_uri"</span>: <span class="string">"gs://bucket/job.py"</span>,
+            <span class="string">"args"</span>: [<span class="string">"--date"</span>, <span class="string">"{{ ds }}"</span>]
+        },
+        <span class="string">"runtime_config"</span>: {<span class="string">"version"</span>: <span class="string">"2.0"</span>}
+    }
+)</code></pre>
+    </div>
+</div>
+
+<!-- Dataflow Section -->
+<div class="section" id="dataflow">
+    <h2>Dataflow Operators</h2>
+
+    <div class="operator">
+        <h3>DataflowStartFlexTemplateOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Run a Flex Template (custom container-based Dataflow job).</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.dataflow <span class="keyword">import</span> DataflowStartFlexTemplateOperator
+
+DataflowStartFlexTemplateOperator(
+    task_id=<span class="string">"run_flex_template"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    location=<span class="string">"us-central1"</span>,
+    body={
+        <span class="string">"launchParameter"</span>: {
+            <span class="string">"containerSpecGcsPath"</span>: <span class="string">"gs://templates/my-template.json"</span>,
+            <span class="string">"jobName"</span>: <span class="string">"etl-{{ ds_nodash }}"</span>,
+            <span class="string">"parameters"</span>: {
+                <span class="string">"input"</span>: <span class="string">"gs://input/{{ ds }}/"</span>,
+                <span class="string">"output"</span>: <span class="string">"project:dataset.table"</span>
+            }
+        }
+    }
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>DataflowTemplatedJobStartOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Run a classic Dataflow template (e.g., GCS-to-BQ).</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.dataflow <span class="keyword">import</span> DataflowTemplatedJobStartOperator
+
+DataflowTemplatedJobStartOperator(
+    task_id=<span class="string">"run_template"</span>,
+    template=<span class="string">"gs://dataflow-templates/latest/GCS_Text_to_BigQuery"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    location=<span class="string">"us-central1"</span>,
+    parameters={
+        <span class="string">"inputFilePattern"</span>: <span class="string">"gs://bucket/data/*.json"</span>,
+        <span class="string">"outputTable"</span>: <span class="string">"project:dataset.table"</span>,
+        <span class="string">"JSONPath"</span>: <span class="string">"gs://bucket/schema.json"</span>
+    }
+)</code></pre>
+    </div>
+</div>
+
+<!-- PubSub Section -->
+<div class="section" id="pubsub">
+    <h2>PubSub Operators</h2>
+
+    <div class="operator">
+        <h3>PubSubPublishMessageOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Publish messages to trigger downstream systems.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.pubsub <span class="keyword">import</span> PubSubPublishMessageOperator
+
+PubSubPublishMessageOperator(
+    task_id=<span class="string">"publish_event"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    topic=<span class="string">"pipeline-events"</span>,
+    messages=[{<span class="string">"data"</span>: b<span class="string">'{"status":"complete","date":"{{ ds }}"}'</span>}]
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>PubSubPullSensor <span class="badge badge-sensor">Sensor</span></h3>
+        <p class="usecase">Use case: Wait for a message before starting processing.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.sensors.pubsub <span class="keyword">import</span> PubSubPullSensor
+
+PubSubPullSensor(
+    task_id=<span class="string">"wait_for_trigger"</span>,
+    project_id=<span class="string">"my-project"</span>,
+    subscription=<span class="string">"my-subscription"</span>,
+    max_messages=<span class="param">1</span>,
+    poke_interval=<span class="param">60</span>,
+    mode=<span class="string">"reschedule"</span>
+)</code></pre>
+    </div>
+</div>
+
+<!-- Core Operators Section -->
+<div class="section" id="core">
+    <h2>Core / Utility Operators</h2>
+
+    <div class="operator">
+        <h3>PythonOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Run arbitrary Python logic (API calls, transformations, validations).</p>
+        <pre><code><span class="keyword">from</span> airflow.operators.python <span class="keyword">import</span> PythonOperator
+
+PythonOperator(
+    task_id=<span class="string">"process_data"</span>,
+    python_callable=my_function,
+    op_kwargs={<span class="string">"date"</span>: <span class="string">"{{ ds }}"</span>}
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BranchPythonOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Conditional branching based on runtime logic.</p>
+        <pre><code><span class="keyword">from</span> airflow.operators.python <span class="keyword">import</span> BranchPythonOperator
+
+<span class="keyword">def</span> <span class="func">choose_branch</span>(**context):
+    <span class="keyword">if</span> context[<span class="string">'params'</span>][<span class="string">'env'</span>] == <span class="string">'prod'</span>:
+        <span class="keyword">return</span> <span class="string">'full_load_task'</span>
+    <span class="keyword">return</span> <span class="string">'incremental_task'</span>
+
+BranchPythonOperator(task_id=<span class="string">"branch"</span>, python_callable=choose_branch)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>ShortCircuitOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Skip all downstream tasks if condition is False.</p>
+        <pre><code><span class="keyword">from</span> airflow.operators.python <span class="keyword">import</span> ShortCircuitOperator
+
+ShortCircuitOperator(
+    task_id=<span class="string">"check_if_holiday"</span>,
+    python_callable=<span class="keyword">lambda</span>: <span class="keyword">not</span> is_holiday(date.today())
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>TriggerDagRunOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Trigger another DAG (cross-DAG orchestration).</p>
+        <pre><code><span class="keyword">from</span> airflow.operators.trigger_dagrun <span class="keyword">import</span> TriggerDagRunOperator
+
+TriggerDagRunOperator(
+    task_id=<span class="string">"trigger_downstream"</span>,
+    trigger_dag_id=<span class="string">"downstream_dag"</span>,
+    conf={<span class="string">"source_date"</span>: <span class="string">"{{ ds }}"</span>},
+    wait_for_completion=<span class="param">True</span>,
+    poke_interval=<span class="param">60</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>ExternalTaskSensor <span class="badge badge-sensor">Sensor</span></h3>
+        <p class="usecase">Use case: Wait for a task in another DAG to complete.</p>
+        <pre><code><span class="keyword">from</span> airflow.sensors.external_task <span class="keyword">import</span> ExternalTaskSensor
+<span class="keyword">from</span> datetime <span class="keyword">import</span> timedelta
+
+ExternalTaskSensor(
+    task_id=<span class="string">"wait_for_upstream"</span>,
+    external_dag_id=<span class="string">"upstream_dag"</span>,
+    external_task_id=<span class="string">"final_task"</span>,
+    execution_delta=timedelta(hours=<span class="param">1</span>),
+    mode=<span class="string">"reschedule"</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>BashOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Run shell commands, scripts, or CLI tools.</p>
+        <pre><code><span class="keyword">from</span> airflow.operators.bash <span class="keyword">import</span> BashOperator
+
+BashOperator(
+    task_id=<span class="string">"run_script"</span>,
+    bash_command=<span class="string">"gsutil cp gs://bucket/file.csv /tmp/ && wc -l /tmp/file.csv"</span>
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>EmptyOperator (formerly DummyOperator) <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: DAG structure placeholder, join point after branching.</p>
+        <pre><code><span class="keyword">from</span> airflow.operators.empty <span class="keyword">import</span> EmptyOperator
+
+EmptyOperator(task_id=<span class="string">"start"</span>)
+EmptyOperator(task_id=<span class="string">"end"</span>, trigger_rule=<span class="string">"none_failed_min_one_success"</span>)</code></pre>
+    </div>
+</div>
+
+<!-- Exceptions Section -->
+<div class="section" id="exceptions">
+    <h2>Exceptions &amp; State</h2>
+
+    <div class="operator">
+        <h3>AirflowFailException <span class="badge badge-exception">Exception</span></h3>
+        <p class="usecase">Use case: Immediately fail a task without retries.</p>
+        <pre><code><span class="keyword">from</span> airflow.exceptions <span class="keyword">import</span> AirflowFailException
+
+<span class="keyword">def</span> <span class="func">validate</span>(**context):
+    <span class="keyword">if</span> row_count == <span class="param">0</span>:
+        <span class="keyword">raise</span> AirflowFailException(<span class="string">"No data found - failing without retry"</span>)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>AirflowSkipException <span class="badge badge-exception">Exception</span></h3>
+        <p class="usecase">Use case: Mark task as skipped programmatically.</p>
+        <pre><code><span class="keyword">from</span> airflow.exceptions <span class="keyword">import</span> AirflowSkipException
+
+<span class="keyword">def</span> <span class="func">conditional_run</span>(**context):
+    <span class="keyword">if not</span> data_available():
+        <span class="keyword">raise</span> AirflowSkipException(<span class="string">"No data today, skipping"</span>)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>DagRunState <span class="badge badge-exception">Utility</span></h3>
+        <p class="usecase">Use case: Check/set DAG run state programmatically.</p>
+        <pre><code><span class="keyword">from</span> airflow.utils.state <span class="keyword">import</span> DagRunState
+<span class="keyword">from</span> airflow.models <span class="keyword">import</span> DagRun
+
+dag_runs = DagRun.find(dag_id=<span class="string">"my_dag"</span>, state=DagRunState.FAILED)</code></pre>
+    </div>
+</div>
+
+<!-- Cloud SQL Section -->
+<div class="section" id="cloudsql">
+    <h2>Cloud SQL</h2>
+
+    <div class="operator">
+        <h3>CloudSQLExportInstanceOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Export Cloud SQL data to GCS for BQ loading.</p>
+        <pre><code><span class="keyword">from</span> airflow.providers.google.cloud.operators.cloud_sql <span class="keyword">import</span> CloudSQLExportInstanceOperator
+
+CloudSQLExportInstanceOperator(
+    task_id=<span class="string">"export_sql"</span>,
+    instance=<span class="string">"my-instance"</span>,
+    body={
+        <span class="string">"exportContext"</span>: {
+            <span class="string">"fileType"</span>: <span class="string">"CSV"</span>,
+            <span class="string">"uri"</span>: <span class="string">"gs://bucket/export.csv"</span>,
+            <span class="string">"databases"</span>: [<span class="string">"mydb"</span>]
+        }
+    }
+)</code></pre>
+    </div>
+
+    <div class="operator">
+        <h3>CloudSQLImportInstanceOperator <span class="badge badge-operator">Operator</span></h3>
+        <p class="usecase">Use case: Import data from GCS into Cloud SQL.</p>
+        <pre><code>CloudSQLImportInstanceOperator(
+    task_id=<span class="string">"import_sql"</span>,
+    instance=<span class="string">"my-instance"</span>,
+    body={
+        <span class="string">"importContext"</span>: {
+            <span class="string">"fileType"</span>: <span class="string">"CSV"</span>,
+            <span class="string">"uri"</span>: <span class="string">"gs://bucket/data.csv"</span>,
+            <span class="string">"database"</span>: <span class="string">"mydb"</span>,
+            <span class="string">"csvImportOptions"</span>: {<span class="string">"table"</span>: <span class="string">"my_table"</span>}
+        }
+    }
+)</code></pre>
+    </div>
+</div>
+
+<!-- DAG Pattern Section -->
+<div class="section" id="pattern">
+    <h2>Typical DAG Pattern (GCP Data Engineering)</h2>
+
+    <div class="dag-pattern">
+        start >> wait_for_file >> create_cluster >> submit_spark_job >> delete_cluster<br><br>
+        delete_cluster >> load_to_bq >> check_data_quality >> publish_event >> end
+    </div>
+
+    <div class="operator" style="margin-top: 20px;">
+        <h3>Complete DAG Example</h3>
+        <pre><code><span class="keyword">from</span> airflow <span class="keyword">import</span> DAG
+<span class="keyword">from</span> airflow.operators.empty <span class="keyword">import</span> EmptyOperator
+<span class="keyword">from</span> airflow.providers.google.cloud.sensors.gcs <span class="keyword">import</span> GCSObjectExistenceSensor
+<span class="keyword">from</span> airflow.providers.google.cloud.operators.dataproc <span class="keyword">import</span> (
+    DataprocCreateClusterOperator,
+    DataprocSubmitJobOperator,
+    DataprocDeleteClusterOperator,
+)
+<span class="keyword">from</span> airflow.providers.google.cloud.transfers.gcs_to_bigquery <span class="keyword">import</span> GCSToBigQueryOperator
+<span class="keyword">from</span> airflow.providers.google.cloud.operators.bigquery <span class="keyword">import</span> BigQueryCheckOperator
+<span class="keyword">from</span> airflow.providers.google.cloud.operators.pubsub <span class="keyword">import</span> PubSubPublishMessageOperator
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+
+<span class="keyword">with</span> DAG(
+    dag_id=<span class="string">"gcp_etl_pipeline"</span>,
+    start_date=datetime(<span class="param">2024</span>, <span class="param">1</span>, <span class="param">1</span>),
+    schedule_interval=<span class="string">"@daily"</span>,
+    catchup=<span class="param">False</span>,
+    default_args={<span class="string">"retries"</span>: <span class="param">2</span>, <span class="string">"retry_delay"</span>: timedelta(minutes=<span class="param">5</span>)}
+) <span class="keyword">as</span> dag:
+
+    start = EmptyOperator(task_id=<span class="string">"start"</span>)
+
+    wait_for_file = GCSObjectExistenceSensor(
+        task_id=<span class="string">"wait_for_file"</span>,
+        bucket=<span class="string">"landing-bucket"</span>,
+        object=<span class="string">"feed/{{ ds }}/data.parquet"</span>,
+        mode=<span class="string">"reschedule"</span>
+    )
+
+    create_cluster = DataprocCreateClusterOperator(
+        task_id=<span class="string">"create_cluster"</span>,
+        project_id=<span class="string">"my-project"</span>,
+        region=<span class="string">"us-central1"</span>,
+        cluster_name=<span class="string">"etl-{{ ds_nodash }}"</span>,
+        cluster_config={...}
+    )
+
+    spark_job = DataprocSubmitJobOperator(
+        task_id=<span class="string">"spark_transform"</span>,
+        project_id=<span class="string">"my-project"</span>,
+        region=<span class="string">"us-central1"</span>,
+        job={...}
+    )
+
+    delete_cluster = DataprocDeleteClusterOperator(
+        task_id=<span class="string">"delete_cluster"</span>,
+        project_id=<span class="string">"my-project"</span>,
+        region=<span class="string">"us-central1"</span>,
+        cluster_name=<span class="string">"etl-{{ ds_nodash }}"</span>,
+        trigger_rule=<span class="string">"all_done"</span>
+    )
+
+    load_bq = GCSToBigQueryOperator(
+        task_id=<span class="string">"load_to_bq"</span>,
+        bucket=<span class="string">"processed-bucket"</span>,
+        source_objects=[<span class="string">"output/{{ ds }}/*.parquet"</span>],
+        destination_project_dataset_table=<span class="string">"project.dataset.table"</span>,
+        source_format=<span class="string">"PARQUET"</span>,
+        write_disposition=<span class="string">"WRITE_TRUNCATE"</span>
+    )
+
+    quality_check = BigQueryCheckOperator(
+        task_id=<span class="string">"quality_check"</span>,
+        sql=<span class="string">"SELECT COUNT(*) > 0 FROM `project.dataset.table` WHERE date='{{ ds }}'"</span>,
+        use_legacy_sql=<span class="param">False</span>
+    )
+
+    notify = PubSubPublishMessageOperator(
+        task_id=<span class="string">"notify"</span>,
+        project_id=<span class="string">"my-project"</span>,
+        topic=<span class="string">"pipeline-complete"</span>,
+        messages=[{<span class="string">"data"</span>: b<span class="string">'{"dag":"gcp_etl","date":"{{ ds }}"}'</span>}]
+    )
+
+    end = EmptyOperator(task_id=<span class="string">"end"</span>)
+
+    <span class="comment"># DAG Dependencies</span>
+    start >> wait_for_file >> create_cluster >> spark_job >> delete_cluster
+    delete_cluster >> load_bq >> quality_check >> notify >> end</code></pre>
+    </div>
+</div>
+
+<!-- Add new content area -->
+<div id="custom-content"></div>
+
+<script>
+    // Toggle TOC expandable items
+    function toggleToc(header) {
+        const subList = header.nextElementSibling;
+        const btn = header.querySelector('.toc-toggle');
+        if (subList.classList.contains('show')) {
+            subList.classList.remove('show');
+            btn.classList.remove('expanded');
+            btn.textContent = '+';
+        } else {
+            subList.classList.add('show');
+            btn.classList.add('expanded');
+            btn.textContent = '+';
+        }
+    }
+
+    // Make all sections and operators editable
+    function makeEditable() {
+        document.querySelectorAll('.section h2, .operator h3, .operator .usecase, .operator p:not(.usecase), .toc h2, h1, .subtitle, .dag-pattern').forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+        });
+        document.querySelectorAll('pre code').forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+            el.style.whiteSpace = 'pre-wrap';
+        });
+    }
+
+    // Add a new section
+    function addSection() {
+        const title = prompt('Section title:');
+        if (!title) return;
+        const section = document.createElement('div');
+        section.className = 'section';
+        section.innerHTML = `
+            <button class="delete-btn" onclick="this.parentElement.remove(); saveContent();">✕ Delete</button>
+            <h2 contenteditable="true">${escapeHTML(title)}</h2>
+            <div class="operator">
+                <h3 contenteditable="true">New Item</h3>
+                <p class="usecase" contenteditable="true">Use case: Describe your use case here.</p>
+                <pre><code contenteditable="true" style="white-space:pre-wrap;">// Add your code here</code></pre>
+            </div>
+            <div class="add-block" onclick="addOperatorToSection(this)">+ Add operator/item to this section</div>
+        `;
+        const customContent = document.getElementById('custom-content');
+        customContent.appendChild(section);
+        saveContent();
+        showStatus('Section added!');
+    }
+
+    // Add operator to existing section
+    function addOperator() {
+        const sections = document.querySelectorAll('.section h2');
+        let options = '';
+        sections.forEach((s, i) => { options += `${i + 1}. ${s.textContent}\n`; });
+        const choice = prompt('Add operator to which section?\n' + options + '\nEnter number:');
+        if (!choice) return;
+        const idx = parseInt(choice) - 1;
+        const section = document.querySelectorAll('.section')[idx];
+        if (!section) { alert('Invalid section number'); return; }
+        addOperatorToSection(section.querySelector('.add-block') || section);
+    }
+
+    function addOperatorToSection(element) {
+        const name = prompt('Operator/Item name:');
+        if (!name) return;
+        const operator = document.createElement('div');
+        operator.className = 'operator';
+        operator.innerHTML = `
+            <button class="delete-btn" onclick="this.parentElement.remove(); saveContent();">✕ Delete</button>
+            <h3 contenteditable="true">${escapeHTML(name)}</h3>
+            <p class="usecase" contenteditable="true">Use case: Describe the use case here.</p>
+            <pre><code contenteditable="true" style="white-space:pre-wrap;">// Add your code example here</code></pre>
+        `;
+        element.parentElement.insertBefore(operator, element);
+        saveContent();
+        showStatus('Operator added!');
+    }
+
+    // Add a free-form note
+    function addNote() {
+        const note = prompt('Enter your note:');
+        if (!note) return;
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'section';
+        noteDiv.innerHTML = `
+            <button class="delete-btn" onclick="this.parentElement.remove(); saveContent();">✕ Delete</button>
+            <h2 contenteditable="true">📝 Note</h2>
+            <p contenteditable="true" style="color:#333; padding:10px;">${escapeHTML(note)}</p>
+        `;
+        document.getElementById('custom-content').appendChild(noteDiv);
+        saveContent();
+        showStatus('Note added!');
+    }
+
+    // Save to localStorage
+    function saveContent() {
+        const content = document.querySelector('body').innerHTML;
+        localStorage.setItem('airflow_gcp_doc', content);
+        showStatus('Saved!');
+    }
+
+    // Load from localStorage
+    function loadContent() {
+        const saved = localStorage.getItem('airflow_gcp_doc');
+        if (saved) {
+            document.querySelector('body').innerHTML = saved;
+        }
+        makeEditable();
+        addDeleteButtons();
+    }
+
+    // Add delete buttons to existing operators
+    function addDeleteButtons() {
+        document.querySelectorAll('.operator').forEach(op => {
+            if (!op.querySelector('.delete-btn')) {
+                const btn = document.createElement('button');
+                btn.className = 'delete-btn';
+                btn.textContent = '✕ Delete';
+                btn.onclick = function() { this.parentElement.remove(); saveContent(); };
+                op.insertBefore(btn, op.firstChild);
+            }
+        });
+        document.querySelectorAll('.section').forEach(sec => {
+            if (!sec.querySelector(':scope > .add-block')) {
+                const addBlock = document.createElement('div');
+                addBlock.className = 'add-block';
+                addBlock.textContent = '+ Add operator/item to this section';
+                addBlock.onclick = function() { addOperatorToSection(this); };
+                sec.appendChild(addBlock);
+            }
+        });
+    }
+
+    // Export as HTML file
+    function exportHTML() {
+        const html = document.documentElement.outerHTML;
+        const blob = new Blob([html], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'airflow_gcp_operators_edited.html';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showStatus('Exported!');
+    }
+
+    // Save as PDF using browser print
+    function saveAsPDF() {
+        // Disable contenteditable before printing
+        const editables = document.querySelectorAll('[contenteditable="true"]');
+        editables.forEach(el => el.setAttribute('contenteditable', 'false'));
+
+        // Expand all TOC items for PDF
+        document.querySelectorAll('.toc-sub').forEach(sub => sub.classList.add('show'));
+
+        // Trigger print dialog (user can choose Save as PDF)
+        setTimeout(() => {
+            window.print();
+            // Re-enable contenteditable after printing
+            setTimeout(() => {
+                editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+            }, 500);
+        }, 200);
+    }
+
+    // Reset to original (clear localStorage)
+    function resetContent() {
+        if (confirm('This will discard all your edits. Are you sure?')) {
+            localStorage.removeItem('airflow_gcp_doc');
+            location.reload();
+        }
+    }
+
+    function showStatus(msg) {
+        const status = document.getElementById('status');
+        if (status) {
+            status.textContent = msg;
+            setTimeout(() => { status.textContent = 'Click any text to edit'; }, 2000);
+        }
+    }
+
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Auto-save on content change
+    document.addEventListener('input', function(e) {
+        if (e.target.getAttribute('contenteditable') === 'true') {
+            clearTimeout(window._autoSaveTimeout);
+            window._autoSaveTimeout = setTimeout(saveContent, 1000);
+        }
+    });
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', loadContent);
+</script>
+
+</body>
+</html>

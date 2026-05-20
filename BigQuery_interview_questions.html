@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<!-- saved from url=(0110)file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Interview Questions &amp; SQL Recipes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg: #ffffff; --surface: #f8f9fb; --border: #e2e6ea;
+            --text: #1a1d23; --text-muted: #5f6b7a; --accent: #2563eb;
+            --accent-light: #eff4ff; --green: #16a34a; --green-light: #f0fdf4;
+            --orange: #ea580c; --orange-light: #fff7ed; --red: #dc2626;
+            --red-light: #fef2f2; --purple: #7c3aed; --purple-light: #f5f3ff;
+            --amber: #d97706; --amber-light: #fffbeb; --teal: #0d9488;
+            --teal-light: #f0fdfa; --pink: #db2777; --pink-light: #fdf2f8;
+            --slate: #475569; --slate-light: #f1f5f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Editable content styling ── */
+        [contenteditable="true"]:focus {
+            outline: 2px solid var(--accent); outline-offset: 2px;
+            border-radius: 4px;
+        }
+        [contenteditable="true"]:hover { background: #fafbfd; }
+
+        /* ── Top toolbar ── */
+        .toolbar {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 30px; display: flex; align-items: center;
+            justify-content: space-between; gap: 12px;
+        }
+        .toolbar-title { font-weight: 700; font-size: 0.95rem; color: var(--accent); }
+        .toolbar-actions { display: flex; gap: 8px; }
+        .btn {
+            padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--text); font-size: 0.82rem;
+            font-weight: 500; cursor: pointer; transition: all 0.15s;
+            font-family: inherit;
+        }
+        .btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+        .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn.primary:hover { background: #1d4ed8; }
+
+        /* ── Sidebar TOC ── */
+        .layout { display: flex; max-width: 1400px; margin: 0 auto; }
+        .sidebar {
+            width: 260px; position: sticky; top: 52px; height: calc(100vh - 52px);
+            overflow-y: auto; padding: 24px 16px; border-right: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar h3 {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--text-muted); margin-bottom: 14px; font-weight: 600;
+        }
+        .sidebar a {
+            display: block; padding: 6px 12px; margin-bottom: 2px;
+            border-radius: 6px; text-decoration: none; font-size: 0.82rem;
+            color: var(--text-muted); transition: all 0.15s; font-weight: 450;
+        }
+        .sidebar a:hover { background: var(--accent-light); color: var(--accent); }
+
+        /* ── Main content ── */
+        .content { flex: 1; min-width: 0; padding: 40px 56px 80px; }
+
+        /* ── Document header ── */
+        .doc-header { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+        .doc-header h1 {
+            font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px;
+            line-height: 1.2; margin-bottom: 10px;
+        }
+        .doc-header .subtitle { font-size: 1.05rem; color: var(--text-muted); }
+        .doc-meta {
+            display: flex; gap: 20px; margin-top: 18px; font-size: 0.82rem; color: var(--text-muted);
+        }
+        .doc-meta span { display: flex; align-items: center; gap: 5px; }
+
+        /* ── Section card ── */
+        .section {
+            margin-bottom: 40px; padding: 28px 32px; border-radius: 14px;
+            border: 1px solid var(--border); background: var(--bg);
+            transition: box-shadow 0.2s;
+        }
+        .section:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+
+        .section-header {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 20px; padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0;
+        }
+        .section-header h2 { font-size: 1.25rem; font-weight: 650; }
+
+        /* ── Color themes ── */
+        .theme-yellow .section-icon   { background: var(--amber-light); }
+        .theme-blue   .section-icon   { background: var(--accent-light); }
+        .theme-purple .section-icon   { background: var(--purple-light); }
+        .theme-red    .section-icon   { background: var(--red-light); }
+        .theme-orange .section-icon   { background: var(--orange-light); }
+        .theme-brown  .section-icon   { background: var(--teal-light); }
+        .theme-dark   .section-icon   { background: var(--slate-light); }
+        .theme-fire   .section-icon   { background: var(--pink-light); }
+        .theme-target .section-icon   { background: var(--green-light); }
+
+        /* ── Question list ── */
+        .q-list { list-style: none; counter-reset: q; }
+        .q-list li {
+            padding: 10px 14px; border-radius: 8px; margin-bottom: 4px;
+            font-size: 0.93rem; display: flex; align-items: flex-start;
+            gap: 10px; transition: background 0.12s;
+        }
+        .q-list li:hover { background: var(--surface); }
+        .q-list li::before {
+            counter-increment: q;
+            content: counter(q);
+            min-width: 24px; height: 24px; border-radius: 6px;
+            background: var(--surface); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+            flex-shrink: 0; margin-top: 1px;
+        }
+
+        /* ── Code blocks ── */
+        .code-card {
+            margin: 24px 0; border-radius: 12px; border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .code-card-header {
+            background: var(--surface); padding: 10px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        .code-card-header span {
+            font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .copy-btn {
+            padding: 4px 12px; border-radius: 6px; border: 1px solid var(--border);
+            background: var(--bg); font-size: 0.72rem; cursor: pointer;
+            font-weight: 500; color: var(--text-muted); font-family: inherit;
+        }
+        .copy-btn:hover { background: var(--accent-light); color: var(--accent); }
+        pre {
+            margin: 0; padding: 20px; overflow-x: auto;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.84rem; line-height: 1.7; background: #fafbfd;
+        }
+        pre code { font-family: inherit; }
+        .kw { color: #7c3aed; font-weight: 500; }
+        .fn { color: #2563eb; }
+        .str { color: #16a34a; }
+        .cmt { color: #94a3b8; font-style: italic; }
+        .tbl { color: #ea580c; }
+
+        /* ── Callout box ── */
+        .callout {
+            padding: 16px 20px; border-radius: 10px; margin: 16px 0;
+            font-size: 0.88rem; display: flex; align-items: flex-start; gap: 10px;
+        }
+        .callout.tip { background: var(--green-light); border-left: 3px solid var(--green); }
+        .callout.warn { background: var(--amber-light); border-left: 3px solid var(--amber); }
+        .callout.info { background: var(--accent-light); border-left: 3px solid var(--accent); }
+
+        /* ── Q&A Accordion ── */
+        .qa-item { margin-bottom: 8px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .qa-question {
+            padding: 14px 18px; background: var(--surface); cursor: pointer;
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 550; font-size: 0.93rem; user-select: none;
+            transition: background 0.15s;
+        }
+        .qa-question:hover { background: #eef1f6; }
+        .qa-question .q-num {
+            min-width: 28px; height: 28px; border-radius: 7px;
+            background: var(--bg); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .qa-question .q-text { flex: 1; }
+        .qa-question .q-arrow {
+            font-size: 0.8rem; color: var(--text-muted); transition: transform 0.2s;
+        }
+        .qa-item.open .qa-question .q-arrow { transform: rotate(180deg); }
+        .qa-answer {
+            display: none; padding: 18px 22px 18px 58px;
+            font-size: 0.9rem; line-height: 1.8; color: #374151;
+            border-top: 1px solid var(--border); background: var(--bg);
+        }
+        .qa-item.open .qa-answer { display: block; }
+        .qa-answer p { margin-bottom: 10px; }
+        .qa-answer ul, .qa-answer ol { padding-left: 20px; margin-bottom: 10px; }
+        .qa-answer li { margin-bottom: 4px; }
+        .qa-answer code {
+            background: #f1f5f9; padding: 2px 6px; border-radius: 4px;
+            font-family: 'JetBrains Mono', Consolas, monospace; font-size: 0.82rem;
+        }
+        .qa-answer .highlight {
+            background: var(--amber-light); padding: 10px 14px; border-radius: 8px;
+            margin: 10px 0; font-size: 0.85rem; border-left: 3px solid var(--amber);
+        }
+        .qa-answer table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.85rem; }
+        .qa-answer th { background: var(--surface); text-align: left; padding: 8px 12px; border: 1px solid var(--border); font-weight: 600; }
+        .qa-answer td { padding: 8px 12px; border: 1px solid var(--border); }
+        .expand-all-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 7px; border: 1px solid var(--border);
+            background: var(--bg); font-size: 0.78rem; cursor: pointer;
+            font-weight: 500; color: var(--text-muted); font-family: inherit;
+            margin-bottom: 16px;
+        }
+        .expand-all-btn:hover { background: var(--accent-light); color: var(--accent); }
+
+        /* ── Print ── */
+        @media print {
+            .toolbar, .sidebar { display: none; }
+            .content { padding: 20px; }
+            .section { break-inside: avoid; border: 1px solid #ddd; }
+        }
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .content { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ TOOLBAR ═══════════ -->
+<div class="toolbar">
+    <span class="toolbar-title">📄 BigQuery Interview Prep</span>
+    <div class="toolbar-actions">
+        <button class="btn" onclick="window.print()">🖨️ Print / PDF</button>
+        <button class="btn primary" onclick="downloadHTML()">💾 Save as HTML</button>
+    </div>
+</div>
+
+<div class="layout">
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<aside class="sidebar">
+    <h3>Table of Contents</h3>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#fundamentals">Fundamentals</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#partitioning">Partitioning &amp; Clustering</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#performance">Query Performance &amp; Cost</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#sql-functions">SQL &amp; Functions</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#architecture">Architecture &amp; Internals</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#data-modeling">Data Modeling</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#streaming">Streaming &amp; Ingestion</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#security">Security &amp; Governance</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#scenarios">Scenario-Based</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#sql-tricks">SQL Tricks</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#top10">Top 10 Questions</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#merge">MERGE Operation</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#insert-missing">Insert Missing Records</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#upsert">Upsert Pattern</a>
+    <a href="file:///C:/Users/skuma1010/OneDrive%20-%20American%20Express/interview/Sumit/BigQuery_interview_questions.html#dedup">Delete Duplicates</a>
+</aside>
+
+<!-- ═══════════ MAIN CONTENT ═══════════ -->
+<main class="content">
+
+    <!-- ── Document Header ── -->
+    <div class="doc-header">
+        <h1 contenteditable="true">BigQuery Interview Questions &amp; SQL Recipes</h1>
+        <p class="subtitle" contenteditable="true">Comprehensive preparation guide covering fundamentals, performance tuning, architecture, and real-world SQL patterns.</p>
+        <div class="doc-meta">
+            <span>👤 Sumit Kumar</span>
+            <span>📅 April 2026</span>
+            <span>📝 Editable — click any text to edit</span>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 1: FUNDAMENTALS -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-yellow" id="fundamentals">
+        <div class="section-header">
+            <div class="section-icon">🟡</div>
+            <h2 contenteditable="true">BigQuery Fundamentals</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, &#39;fundamentals&#39;)">📖 Expand All Answers</button>
+
+        <!-- Q1 -->
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle(&#39;open&#39;)">
+                <span class="q-num">1</span>
+                <span class="q-text" contenteditable="true">What is BigQuery and how is it different from traditional RDBMS?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>BigQuery</strong> is Google Cloud's fully managed, serverless, petabyte-scale <strong>enterprise data warehouse</strong> designed for analytics (OLAP), not transactional workloads (OLTP).</p>
+                <table>
+                    <tbody><tr><th>Aspect</th><th>Traditional RDBMS</th><th>BigQuery</th></tr>
+                    <tr><td><strong>Architecture</strong></td><td>Coupled compute + storage on a single server/cluster</td><td>Separated compute (Dremel) and storage (Colossus) — scales independently</td></tr>
+                    <tr><td><strong>Storage Format</strong></td><td>Row-based (good for transactions)</td><td>Columnar (Capacitor format — great for analytics)</td></tr>
+                    <tr><td><strong>Scaling</strong></td><td>Vertical (bigger servers) or manual sharding</td><td>Automatic horizontal scaling — thousands of workers in seconds</td></tr>
+                    <tr><td><strong>Infrastructure</strong></td><td>You manage servers, indexes, tuning, backups</td><td>Zero infrastructure management — serverless</td></tr>
+                    <tr><td><strong>Indexing</strong></td><td>B-tree indexes required for fast reads</td><td>No indexes — uses columnar scans + partitioning + clustering</td></tr>
+                    <tr><td><strong>Concurrency</strong></td><td>Row-level locks, ACID transactions</td><td>Snapshot isolation, limited DML concurrency</td></tr>
+                    <tr><td><strong>Pricing</strong></td><td>Per server/license</td><td>Per query (bytes scanned) or flat-rate slots</td></tr>
+                    <tr><td><strong>Best For</strong></td><td>OLTP — frequent small reads/writes</td><td>OLAP — large aggregations, analytics, reporting</td></tr>
+                </tbody></table>
+                <div class="highlight">💡 <strong>Key Takeaway:</strong> BigQuery is NOT a replacement for MySQL/PostgreSQL. It's purpose-built for scanning terabytes in seconds for analytics, not for single-row lookups or high-frequency transactional writes.</div>
+            </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle(&#39;open&#39;)">
+                <span class="q-num">2</span>
+                <span class="q-text" contenteditable="true">What is serverless in BigQuery?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Serverless</strong> means you don't provision, configure, or manage any infrastructure. BigQuery handles everything behind the scenes:</p>
+                <ul>
+                    <li><strong>No cluster management</strong> — no VMs to spin up, no Hadoop/Spark clusters to tune</li>
+                    <li><strong>Automatic scaling</strong> — BigQuery assigns compute resources (slots) dynamically based on query complexity</li>
+                    <li><strong>No capacity planning</strong> — storage grows automatically as you load data</li>
+                    <li><strong>No software patching</strong> — Google handles OS, security patches, engine upgrades</li>
+                    <li><strong>Pay-per-use</strong> — you pay for bytes scanned (on-demand) or reserved slots (capacity), not idle servers</li>
+                </ul>
+                <p><strong>What happens when you run a query:</strong></p>
+                <ol>
+                    <li>Your SQL goes to BigQuery's <strong>query engine (Dremel)</strong></li>
+                    <li>Dremel creates an optimized execution plan and distributes it across <strong>thousands of workers</strong></li>
+                    <li>Workers read data in parallel from <strong>Colossus</strong> (distributed storage)</li>
+                    <li>Results are aggregated and returned to you</li>
+                    <li>Workers are released — <strong>you never see or manage them</strong></li>
+                </ol>
+                <div class="highlight">💡 <strong>Interview Angle:</strong> "Serverless doesn't mean no servers — it means the servers are Google's problem, not yours."</div>
+            </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle(&#39;open&#39;)">
+                <span class="q-num">3</span>
+                <span class="q-text" contenteditable="true">What is the difference between on-demand and flat-rate (capacity) pricing?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tbody><tr><th>Aspect</th><th>On-Demand Pricing</th><th>Flat-Rate (Capacity / Editions) Pricing</th></tr>
+                    <tr><td><strong>Cost Model</strong></td><td>$6.25 per TB scanned (first 1 TB/month free)</td><td>Fixed monthly fee for reserved <strong>slots</strong> (e.g., 100 slots)</td></tr>
+                    <tr><td><strong>Best For</strong></td><td>Ad-hoc queries, low/unpredictable usage</td><td>Heavy, consistent workloads — ETL pipelines, BI dashboards</td></tr>
+                    <tr><td><strong>Scaling</strong></td><td>Up to ~2,000 concurrent slots shared pool</td><td>Dedicated slots — no contention with other GCP customers</td></tr>
+                    <tr><td><strong>Cost Control</strong></td><td>Harder to predict — depends on query efficiency</td><td>Predictable — fixed monthly cost regardless of data scanned</td></tr>
+                    <tr><td><strong>Idle Cost</strong></td><td>$0 when not querying</td><td>You pay even if slots are idle</td></tr>
+                    <tr><td><strong>Concurrency</strong></td><td>Can experience slot contention during peak</td><td>Guaranteed capacity for your org</td></tr>
+                </tbody></table>
+                <p><strong>BigQuery Editions (2023+):</strong> Google introduced <strong>Standard</strong>, <strong>Enterprise</strong>, and <strong>Enterprise Plus</strong> editions with <strong>autoscaling slots</strong> — you set a baseline + max slots, and BigQuery scales within that range. This replaced the old flat-rate model.</p>
+                <div class="highlight">💡 <strong>When to choose what:</strong><br>
+                    • Scanning &lt; 1 TB/month → <strong>On-demand</strong> (free tier covers it)<br>
+                    • Scanning &gt; 50 TB/month → <strong>Editions with reserved slots</strong> is likely cheaper<br>
+                    • Need guaranteed SLA + concurrency → <strong>Enterprise Edition</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle(&#39;open&#39;)">
+                <span class="q-num">4</span>
+                <span class="q-text" contenteditable="true">How does BigQuery store data internally?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery uses a <strong>three-layer architecture</strong> for data storage:</p>
+                <ol>
+                    <li><strong>Colossus (Distributed File System)</strong> — Google's next-gen distributed file system (successor to GFS). All BigQuery data lives here as compressed, encrypted columnar files. Colossus handles replication, durability, and availability automatically.</li>
+                    <li><strong>Capacitor (Columnar Format)</strong> — BigQuery's proprietary columnar storage format. Data is stored column-by-column rather than row-by-row. Each column is compressed independently using encoding schemes optimized for that column's data type (dictionary encoding, run-length encoding, etc.).</li>
+                    <li><strong>Jupiter Network</strong> — Google's petabit-scale network fabric that connects compute (Dremel workers) to storage (Colossus) at extremely high throughput, enabling the separation of compute and storage without performance penalty.</li>
+                </ol>
+                <p><strong>How data is physically organized:</strong></p>
+                <ul>
+                    <li>Tables are split into <strong>storage blocks</strong> (columnar chunks)</li>
+                    <li>Each block stores data for a subset of rows, but in <strong>column-oriented layout</strong></li>
+                    <li>Metadata tracks min/max values per block for <strong>block pruning</strong> (skip irrelevant blocks)</li>
+                    <li>All data is <strong>encrypted at rest</strong> (AES-256) and <strong>replicated</strong> across zones</li>
+                </ul>
+                <div class="highlight">💡 <strong>Key Point:</strong> Because compute (Dremel) and storage (Colossus) are separate, you can store petabytes cheaply and only pay for compute when you actually query.</div>
+            </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle(&#39;open&#39;)">
+                <span class="q-num">5</span>
+                <span class="q-text" contenteditable="true">What is columnar storage and why is it important?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Columnar storage</strong> stores data column-by-column instead of row-by-row.</p>
+                <p><strong>Row-based (Traditional RDBMS):</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">Row1: [id=1, name="Alice", age=30, city="NYC"]
+Row2: [id=2, name="Bob",   age=25, city="LA"]
+Row3: [id=3, name="Carol", age=35, city="NYC"]</pre>
+                <p><strong>Columnar (BigQuery):</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">id column:   [1, 2, 3]
+name column: ["Alice", "Bob", "Carol"]
+age column:  [30, 25, 35]
+city column: ["NYC", "LA", "NYC"]</pre>
+                <p><strong>Why it matters for analytics:</strong></p>
+                <ul>
+                    <li><strong>Column pruning</strong> — <code>SELECT name, age FROM t</code> reads only 2 columns, skips the rest. In row-based storage, the entire row must be read.</li>
+                    <li><strong>Better compression</strong> — similar values in a column compress much better (e.g., "NYC" repeated → dictionary encoding). Typically <strong>10x better compression</strong> than row storage.</li>
+                    <li><strong>Vectorized processing</strong> — CPU can process a batch of same-type values using SIMD instructions, much faster than processing mixed-type rows.</li>
+                    <li><strong>Cost savings</strong> — BigQuery charges per bytes scanned. Fewer columns read = less cost.</li>
+                </ul>
+                <div class="highlight">⚠️ <strong>This is why <code>SELECT *</code> is expensive in BigQuery</strong> — it reads ALL columns. Always select only the columns you need.</div>
+            </div>
+        </div>
+
+        <!-- Q6 -->
+        <div class="qa-item open">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle(&#39;open&#39;)">
+                <span class="q-num">6</span>
+                <span class="q-text" contenteditable="true">What are slots in BigQuery?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><span style="font-size: 0.9rem;">A </span><b style="font-size: 0.9rem;">slot </b><span style="font-size: 0.9rem;">in BigQuery represents a unit of&nbsp;</span><strong style="font-size: 0.9rem;">computational capacity&nbsp;</strong><span style="font-size: 0.9rem;">(CPU + memory) used to execute query operations, enabling parallel processing across distributed infrastructure.</span></p><pre class="overflow-visible! px-0!" data-start="249" data-end="314"><div class="relative w-full mt-4 mb-1"><div class=""><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="h-full w-full border-radius-3xl bg-token-bg-elevated-secondary corner-superellipse/1.1 overflow-clip rounded-3xl lxnfua_clipPathFallback"><div class="relative"><div class="pe-11 pt-3"><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼ5 ͼj"><div class="cm-scroller"><div class="cm-content q9tKkq_readonly"><b>1 Slot ≈ 1 CPU + RAM used to process data</b></div></div></div></div></div></div></div></div></div></div></div></div></div></pre>
+                <p><strong>How slots work:</strong></p><p><span style="font-size: 14.4px; white-space: normal;"><b><span style="white-space:pre">	</span>Query submitted</b></span></p><p><span style="font-size: 14.4px; white-space: normal;"><b><span style="white-space:pre">			</span>↓</b></span></p><p><span style="font-size: 14.4px; white-space: normal;"><b><span style="white-space:pre">	</span>BigQuery breaks into stages</b></span></p><p><span style="font-size: 14.4px; white-space: normal;"><b><span style="white-space:pre">			</span>↓</b></span></p><p><span style="font-size: 14.4px; white-space: normal;"><b><span style="white-space:pre">	</span>Stages split into tasks</b></span></p><p><span style="font-size: 14.4px; white-space: normal;"><b><span style="white-space:pre">			</span>↓</b></span></p><p><span style="font-size: 14.4px; white-space: normal;"><b><span style="white-space:pre">	</span>Tasks run in parallel using slots</b></span></p>
+                <ul>
+                    <li>When you submit a query, BigQuery's scheduler breaks it into <strong>stages</strong> and assigns slots to each stage</li>
+                    <li>A simple query may use a few slots; a complex query scanning TBs may use thousands</li>
+                    <li>Slots handle: reading data, filtering, joining, aggregating, sorting, writing results</li>
+                </ul><div><br></div>
+                <table>
+                    <tbody><tr><th>Model</th><th>Slots</th><th>Behavior</th></tr>
+                    <tr><td><strong>On-Demand</strong></td><td>Up to ~2,000 (shared pool)</td><td>BigQuery dynamically allocates from a shared pool. No guarantee during peak times.</td></tr>
+                    <tr><td><strong>Editions (Autoscaling)</strong></td><td>Baseline + burst up to max</td><td>You set baseline=100, max=500. BigQuery autoscales within that range. You pay for baseline always + burst per-second.</td></tr>
+                    <tr><td><strong>Legacy Flat-Rate</strong></td><td>Fixed (e.g., 500)</td><td>Dedicated slots. No bursting. Pay fixed monthly.</td></tr>
+                </tbody></table>
+                <p><strong>Monitoring slots:</strong></p>
+                <ul>
+                    <li><code>INFORMATION_SCHEMA.JOBS</code> — see <code>total_slot_ms</code> per query</li>
+                    <li>BigQuery Admin panel → Slot utilization chart</li>
+                    <li>Cloud Monitoring → <code>bigquery.googleapis.com/slots/allocated</code></li>
+                </ul>
+                <div class="highlight">💡 <strong>Slot Contention:</strong> If your queries are slow but data is small, you may be hitting slot contention — too many concurrent queries competing for the same slot pool. Consider reserved capacity or optimize queries to use fewer slots.</div>
+            </div>
+        </div>
+
+        <!-- Q7 -->
+        <div class="qa-item open">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle(&#39;open&#39;)">
+                <span class="q-num">7</span>
+                <span class="q-text" contenteditable="true">What is a dataset vs table vs view?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery organizes data in a <strong>three-level hierarchy</strong>:</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">Project (GCP Project)
+  └── Dataset (like a database/schema)
+        ├── Table (actual data)
+        ├── View (saved SQL query)
+        ├── Materialized View (cached query result)
+        └── Routine (UDF / stored procedure)</pre>
+                <table>
+                    <tbody><tr><th>Concept</th><th>What It Is</th><th>Key Details</th></tr>
+                    <tr><td><strong>Dataset</strong></td><td>A container for tables, views, routines</td><td>
+                        • Equivalent to a <strong>schema</strong> in traditional RDBMS<br>
+                        • Has a <strong>geographic location</strong> (US, EU, etc.) — set at creation, can't change<br>
+                        • IAM permissions are set at dataset level<br>
+                        • Referenced as: <code>project.dataset</code>
+                    </td></tr>
+                    <tr><td><strong>Table</strong></td><td>Stores actual data in columnar format</td><td>
+                        • Types: <strong>Native</strong> (managed), <strong>External</strong> (GCS/Drive), <strong>Temporary</strong><br>
+                        • Can be <strong>partitioned</strong> and <strong>clustered</strong><br>
+                        • Supports schema evolution (add columns, relax REQUIRED → NULLABLE)<br>
+                        • Referenced as: <code>project.dataset.table</code>
+                    </td></tr>
+                    <tr><td><strong>View</strong></td><td>A saved SQL query — no data stored</td><td>
+                        • Runs the underlying query every time it's accessed<br>
+                        • Can be <strong>authorized</strong> to share data without exposing source tables<br>
+                        • No extra storage cost, but full query cost each time
+                    </td></tr>
+                    <tr><td><strong>Materialized View</strong></td><td>A cached, pre-computed query result</td><td>
+                        • BigQuery auto-refreshes when base table changes<br>
+                        • <strong>Zero-maintenance caching</strong> — optimizer can rewrite queries to use it<br>
+                        • Has storage cost (stores the result), but reduces query cost &amp; latency<br>
+                        • Limited SQL support (no JOINs across tables in some cases)
+                    </td></tr>
+                </tbody></table>
+                <div class="highlight">💡 <strong>Best Practice:</strong> Use <strong>materialized views</strong> for expensive aggregations that are queried frequently (e.g., daily summary dashboards). Use <strong>regular views</strong> for access control (authorized views) and reusable query logic.</div>
+            </div>
+        </div>
+
+        <div class="callout tip">
+            <span>💡</span>
+            <div contenteditable="true"><strong>Tip:</strong> BigQuery uses <strong>Dremel</strong> execution engine and <strong>Capacitor</strong> columnar format. It separates compute from storage, allowing massive parallelism without provisioning servers.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 2: PARTITIONING & CLUSTERING -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-yellow" id="partitioning">
+        <div class="section-header">
+            <div class="section-icon">🟡</div>
+            <h2 contenteditable="true">Partitioning &amp; Clustering <span style="font-size:0.7em; color:var(--red); font-weight:700;">(VERY IMPORTANT)</span></h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'partitioning')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">1</span>
+                <span class="q-text">What is table partitioning in BigQuery?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Partitioning</strong> divides a large table into smaller, manageable segments (partitions) based on a column's value. When you query with a filter on the partition column, BigQuery only scans the relevant partitions — drastically reducing bytes processed and cost.</p>
+                <p><strong>Three types of partitioning:</strong></p>
+                <table>
+                    <tr><th>Type</th><th>How It Works</th><th>Use Case</th></tr>
+                    <tr><td><strong>Ingestion-time</strong></td><td>Automatically partitions by <code>_PARTITIONTIME</code> or <code>_PARTITIONDATE</code> (when data was loaded)</td><td>When you don't control the source schema</td></tr>
+                    <tr><td><strong>Time-unit column</strong></td><td>Partition by a <code>DATE</code>, <code>TIMESTAMP</code>, or <code>DATETIME</code> column (HOUR, DAY, MONTH, YEAR granularity)</td><td>Most common — event dates, transaction dates</td></tr>
+                    <tr><td><strong>Integer range</strong></td><td>Partition by an integer column with start, end, and interval</td><td>Customer IDs, zip codes, numeric keys</td></tr>
+                </table>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">CREATE TABLE project.dataset.orders (
+  order_id INT64,
+  order_date DATE,
+  amount NUMERIC
+)
+PARTITION BY order_date;  -- daily partitions by default</pre>
+                <div class="highlight">💡 <strong>Limit:</strong> Maximum <strong>4,000 partitions</strong> per table. For daily partitions, that's ~11 years of data.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">2</span>
+                <span class="q-text">Difference between ingestion-time and column-based partitioning.</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Aspect</th><th>Ingestion-Time Partitioning</th><th>Column-Based Partitioning</th></tr>
+                    <tr><td><strong>Partition Key</strong></td><td>Auto-generated pseudo-column <code>_PARTITIONTIME</code></td><td>A real column in your table (DATE/TIMESTAMP/INT)</td></tr>
+                    <tr><td><strong>Control</strong></td><td>Partitioned by when data is loaded, not the data content</td><td>You choose which column to partition on</td></tr>
+                    <tr><td><strong>Late-arriving data</strong></td><td>Goes to the partition of load time, not event time → can cause incorrect partition placement</td><td>Goes to the correct partition based on column value</td></tr>
+                    <tr><td><strong>Granularity</strong></td><td>Daily only (hourly since 2020)</td><td>HOUR, DAY, MONTH, or YEAR</td></tr>
+                    <tr><td><strong>Querying</strong></td><td>Filter with <code>WHERE _PARTITIONDATE = '2026-01-01'</code></td><td>Filter with <code>WHERE order_date = '2026-01-01'</code></td></tr>
+                    <tr><td><strong>Recommendation</strong></td><td>Legacy — avoid for new tables</td><td><strong>Preferred</strong> — more accurate and flexible</td></tr>
+                </table>
+                <div class="highlight">⚠️ <strong>Best Practice:</strong> Always prefer column-based partitioning. Ingestion-time partitioning was useful before column-based was available, but is now considered legacy.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">3</span>
+                <span class="q-text">What is clustering and how is it different from partitioning?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Clustering</strong> sorts data within each partition (or the whole table) by up to 4 columns. BigQuery stores metadata about the min/max values in each data block, so queries filtering on clustered columns can skip irrelevant blocks.</p>
+                <table>
+                    <tr><th>Feature</th><th>Partitioning</th><th>Clustering</th></tr>
+                    <tr><td><strong>How it works</strong></td><td>Physically separates data into distinct partitions</td><td>Sorts data within partitions/table by column values</td></tr>
+                    <tr><td><strong>Max columns</strong></td><td>1 column only</td><td>Up to 4 columns</td></tr>
+                    <tr><td><strong>Column types</strong></td><td>DATE, TIMESTAMP, DATETIME, INT64</td><td>Any data type (STRING, INT, FLOAT, etc.)</td></tr>
+                    <tr><td><strong>Pruning type</strong></td><td>Partition pruning — entire partitions skipped</td><td>Block pruning — individual blocks within partition skipped</td></tr>
+                    <tr><td><strong>Cost estimate</strong></td><td>Exact bytes shown before query runs (dry run)</td><td>Estimate only — actual bytes may be less after block pruning</td></tr>
+                    <tr><td><strong>Maintenance</strong></td><td>None needed</td><td>BigQuery auto-reclusters in background</td></tr>
+                </table>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">CREATE TABLE project.dataset.orders (
+  order_id INT64,
+  order_date DATE,
+  customer_id INT64,
+  region STRING,
+  amount NUMERIC
+)
+PARTITION BY order_date
+CLUSTER BY region, customer_id;  -- sort within each partition</pre>
+                <div class="highlight">💡 <strong>Rule of Thumb:</strong> Partition for coarse-grained filtering (date ranges). Cluster for fine-grained filtering within partitions (specific IDs, categories, regions).</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">4</span>
+                <span class="q-text">When should you use clustering instead of partitioning?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p>Use <strong>clustering alone</strong> (without partitioning) when:</p>
+                <ul>
+                    <li><strong>No suitable DATE/TIMESTAMP column</strong> — if your main filter is on STRING or high-cardinality INT columns</li>
+                    <li><strong>Too many partitions</strong> — partitioning on a column that would create &gt;4,000 unique values</li>
+                    <li><strong>Partition sizes are too small</strong> — if each partition has &lt;1 GB, partitioning overhead exceeds benefits. Clustering works better on smaller granularities</li>
+                    <li><strong>Multiple filter columns</strong> — you frequently filter on 2-4 columns together (e.g., <code>region</code> + <code>product_type</code> + <code>status</code>)</li>
+                </ul>
+                <p>Use <strong>both together</strong> when:</p>
+                <ul>
+                    <li>You have a date column for coarse filtering AND other columns for fine filtering</li>
+                    <li>Example: <code>PARTITION BY event_date CLUSTER BY user_id, country</code></li>
+                </ul>
+                <div class="highlight">💡 <strong>Column Order Matters in Clustering:</strong> The first cluster column has the strongest sort. Place the most frequently filtered column first. <code>CLUSTER BY region, customer_id</code> is different from <code>CLUSTER BY customer_id, region</code>.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">5</span>
+                <span class="q-text">What happens if you don't filter on the partition column?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Full table scan</strong> — BigQuery scans ALL partitions, which means:</p>
+                <ul>
+                    <li>You pay for scanning the <strong>entire table</strong> (all bytes across all partitions)</li>
+                    <li>The query is <strong>slower</strong> because it processes far more data than needed</li>
+                    <li>You get <strong>no benefit</strong> from partitioning at all</li>
+                </ul>
+                <p><strong>Common mistakes that cause full partition scans:</strong></p>
+                <ul>
+                    <li>Using a <strong>function</strong> on the partition column: <code>WHERE EXTRACT(YEAR FROM order_date) = 2026</code> — this prevents partition pruning!</li>
+                    <li>Filtering on a <strong>different column</strong> than the partition key</li>
+                    <li>Using <strong>subqueries/CTEs</strong> that obscure the partition filter</li>
+                    <li><strong>Dynamic filters</strong> like <code>WHERE order_date = (SELECT MAX(date) FROM ...)</code> — may not enable pruning</li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- ❌ BAD: Function on partition column — scans ALL partitions
+WHERE EXTRACT(YEAR FROM order_date) = 2026
+
+-- ✅ GOOD: Direct filter — prunes to relevant partitions only
+WHERE order_date BETWEEN '2026-01-01' AND '2026-12-31'</pre>
+                <div class="highlight">⚠️ <strong>Pro Tip:</strong> Enable <code>require_partition_filter</code> on critical tables to prevent accidental full scans: <code>ALTER TABLE t SET OPTIONS (require_partition_filter = true)</code></div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">6</span>
+                <span class="q-text">Can a table be both partitioned and clustered?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Yes!</strong> This is the <strong>recommended approach</strong> for most analytics tables. Partitioning provides coarse-grained pruning, and clustering provides fine-grained pruning within each partition.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">CREATE TABLE project.dataset.events (
+  event_id STRING,
+  event_ts TIMESTAMP,
+  user_id INT64,
+  event_type STRING,
+  country STRING
+)
+PARTITION BY DATE(event_ts)           -- coarse: daily partitions
+CLUSTER BY country, event_type;       -- fine: sorted within each partition</pre>
+                <p><strong>Query example that benefits from both:</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">SELECT COUNT(*)
+FROM project.dataset.events
+WHERE DATE(event_ts) = '2026-04-22'   -- partition pruning → scan 1 partition
+  AND country = 'US'                   -- block pruning → skip non-US blocks
+  AND event_type = 'purchase';         -- further block pruning</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">7</span>
+                <span class="q-text">What are the limits on partitioning and clustering?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Limit</th><th>Value</th></tr>
+                    <tr><td>Max partitions per table</td><td><strong>4,000</strong></td></tr>
+                    <tr><td>Max partitions modified per DML</td><td><strong>4,000</strong></td></tr>
+                    <tr><td>Partition column types</td><td><code>DATE</code>, <code>TIMESTAMP</code>, <code>DATETIME</code>, <code>INT64</code> only</td></tr>
+                    <tr><td>Partition granularity</td><td>HOUR, DAY, MONTH, or YEAR</td></tr>
+                    <tr><td>Max clustering columns</td><td><strong>4</strong></td></tr>
+                    <tr><td>Clustering column types</td><td>Any type: STRING, INT64, FLOAT64, BOOL, DATE, TIMESTAMP, GEOGRAPHY, etc.</td></tr>
+                    <tr><td>Recluster trigger</td><td>Automatic (background) — no manual action needed</td></tr>
+                    <tr><td>Max tables per dataset</td><td>No hard limit (practical limits exist)</td></tr>
+                </table>
+                <div class="highlight">💡 <strong>4,000 Partition Limit:</strong> For daily partitions = ~11 years. For hourly partitions = ~167 days. If you need more granularity, consider MONTH partitions + clustering on the date column.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                <span class="q-num">8</span>
+                <span class="q-text">How do you identify hot partitions?</span>
+                <span class="q-arrow">▼</span>
+            </div>
+            <div class="qa-answer" contenteditable="true">
+                <p>A <strong>hot partition</strong> is one that receives disproportionately more writes or is queried far more than others, causing performance bottlenecks.</p>
+                <p><strong>How to detect:</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Check partition sizes to find imbalanced partitions
+SELECT
+  table_name,
+  partition_id,
+  total_rows,
+  total_logical_bytes / (1024*1024*1024) AS size_gb
+FROM `project.dataset.INFORMATION_SCHEMA.PARTITIONS`
+WHERE table_name = 'your_table'
+ORDER BY total_logical_bytes DESC
+LIMIT 20;</pre>
+                <p><strong>Signs of hot partitions:</strong></p>
+                <ul>
+                    <li>One partition is 10x+ larger than others</li>
+                    <li>Streaming inserts or DML always target the same partition (e.g., "today")</li>
+                    <li>Queries on a specific partition are disproportionately slow</li>
+                </ul>
+                <p><strong>Mitigation strategies:</strong></p>
+                <ul>
+                    <li>Switch from DAY to HOUR partitioning to distribute writes</li>
+                    <li>Add clustering to improve read performance within hot partitions</li>
+                    <li>Use MONTH or YEAR partitioning if daily creates too many small partitions</li>
+                    <li>For streaming, use the BigQuery Storage Write API which handles hot partitions better than legacy streaming</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span>ℹ️</span>
+            <div contenteditable="true"><strong>Key Fact:</strong> BigQuery supports up to <strong>4,000 partitions</strong> per table. Clustering supports up to <strong>4 columns</strong>. Use partitioning for coarse filtering (e.g., date) and clustering for fine-grained filtering within partitions.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 3: QUERY PERFORMANCE & COST -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-blue" id="performance">
+        <div class="section-header">
+            <div class="section-icon">🔵</div>
+            <h2 contenteditable="true">Query Performance &amp; Cost Optimization</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'performance')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">How do you reduce query cost in BigQuery?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Top cost-reduction strategies (ranked by impact):</strong></p>
+                <ol>
+                    <li><strong>Select only needed columns</strong> — avoid <code>SELECT *</code>. In columnar storage, each column is a separate scan cost.</li>
+                    <li><strong>Use partition filters</strong> — always filter on the partition column to prune entire partitions.</li>
+                    <li><strong>Use clustering</strong> — cluster on frequently filtered columns for block-level pruning.</li>
+                    <li><strong>Use materialized views</strong> — pre-compute expensive aggregations; BigQuery auto-serves from cache.</li>
+                    <li><strong>Avoid repeated CTEs</strong> — BigQuery executes CTEs every time they're referenced. Use temp tables for reuse.</li>
+                    <li><strong>Use APPROX_* functions</strong> — <code>APPROX_COUNT_DISTINCT</code> is ~10x faster than <code>COUNT(DISTINCT)</code> for large cardinalities.</li>
+                    <li><strong>Limit the result set</strong> — <code>LIMIT</code> doesn't reduce scan cost, but ordering large results is expensive.</li>
+                    <li><strong>Use BI Engine</strong> — in-memory analysis acceleration for repeated dashboard queries.</li>
+                    <li><strong>Set custom cost controls</strong> — <code>maximum_bytes_billed</code> on queries to prevent runaway costs.</li>
+                </ol>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Set a cost cap: query fails if it would scan more than 10 GB
+SELECT col1, col2 FROM table
+WHERE partition_date = '2026-04-22'
+OPTIONS (maximum_bytes_billed = 10737418240);  -- 10 GB</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">What does "bytes processed" mean?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Bytes processed</strong> is the total amount of data BigQuery reads from storage to execute your query. It is the <strong>primary billing metric</strong> for on-demand pricing ($6.25/TB).</p>
+                <p><strong>What affects bytes processed:</strong></p>
+                <ul>
+                    <li><strong>Columns selected</strong> — each column scanned adds its compressed-on-disk size</li>
+                    <li><strong>Partitions scanned</strong> — without partition filter, all partitions are read</li>
+                    <li><strong>Table size</strong> — larger tables = more bytes</li>
+                </ul>
+                <p><strong>What does NOT count:</strong></p>
+                <ul>
+                    <li>Cached results (0 bytes if query hits cache)</li>
+                    <li>Dry run queries (no execution, just estimates)</li>
+                    <li>Queries on <code>INFORMATION_SCHEMA</code> views</li>
+                </ul>
+                <div class="highlight">💡 <strong>Dry Run:</strong> Always use <code>bq query --dry_run</code> or the BigQuery UI's validator to check bytes before running expensive queries.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">Why is SELECT * bad in BigQuery?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>Because BigQuery uses <strong>columnar storage</strong>, each column is stored and scanned independently. <code>SELECT *</code> forces BigQuery to read <strong>every column</strong> in the table.</p>
+                <p><strong>Example on a 1 TB table with 50 columns:</strong></p>
+                <ul>
+                    <li><code>SELECT *</code> → scans all 50 columns → <strong>1 TB scanned → $6.25</strong></li>
+                    <li><code>SELECT col1, col2</code> → scans 2 columns → <strong>~40 GB scanned → $0.25</strong></li>
+                </ul>
+                <p>That's a <strong>25x cost difference</strong> for the same number of rows.</p>
+                <div class="highlight">⚠️ <strong>Exception:</strong> <code>SELECT * EXCEPT(sensitive_col)</code> is a BigQuery feature that selects all columns except the ones listed — useful but still scans most columns.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">How does predicate pushdown work?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Predicate pushdown</strong> is an optimization where filter conditions (<code>WHERE</code> clauses) are pushed as close to the storage layer as possible, so data is filtered <em>before</em> it reaches the compute layer.</p>
+                <p><strong>How it works in BigQuery:</strong></p>
+                <ol>
+                    <li><strong>Partition pruning</strong> — WHERE on partition column eliminates entire partitions at metadata level</li>
+                    <li><strong>Block pruning (clustering)</strong> — min/max metadata on clustered column blocks allows skipping irrelevant blocks</li>
+                    <li><strong>Column pruning</strong> — only requested columns are read from Capacitor files</li>
+                </ol>
+                <p><strong>What breaks predicate pushdown:</strong></p>
+                <ul>
+                    <li>Wrapping partition column in a function: <code>WHERE YEAR(date_col) = 2026</code></li>
+                    <li>Using OR across different partitions with complex expressions</li>
+                    <li>Filtering on computed/derived columns in CTEs</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">What is slot contention?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Slot contention</strong> occurs when multiple queries compete for the same pool of compute slots, causing queries to queue or run slower.</p>
+                <p><strong>Symptoms:</strong></p>
+                <ul>
+                    <li>Queries that normally take 5 seconds now take 30+ seconds</li>
+                    <li>Query execution plan shows stages waiting for slot allocation</li>
+                    <li><code>INFORMATION_SCHEMA.JOBS</code> shows high <code>total_slot_ms</code> relative to wall time</li>
+                </ul>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li><strong>Reservations</strong> — purchase dedicated slots via BigQuery Editions</li>
+                    <li><strong>Workload management</strong> — assign different projects to different reservation pools</li>
+                    <li><strong>Optimize queries</strong> — reduce slot consumption by limiting JOINs, using APPROX functions</li>
+                    <li><strong>Schedule jobs</strong> — stagger ETL pipelines to avoid peak contention windows</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">6</span><span class="q-text">How does BigQuery optimize joins?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery's optimizer automatically chooses the best join strategy:</p>
+                <table>
+                    <tr><th>Strategy</th><th>How It Works</th><th>When Used</th></tr>
+                    <tr><td><strong>Broadcast Join</strong></td><td>Smaller table is copied to every worker processing the larger table</td><td>One table is small enough to fit in memory (~10 MB default threshold)</td></tr>
+                    <tr><td><strong>Hash Join (Shuffle)</strong></td><td>Both tables are shuffled/redistributed by join key across workers</td><td>Both tables are large — data must be co-located by key</td></tr>
+                    <tr><td><strong>Sort-Merge Join</strong></td><td>Both tables are sorted by join key, then merged</td><td>Large-to-large joins on sorted (clustered) data</td></tr>
+                </table>
+                <p><strong>Optimization tips:</strong></p>
+                <ul>
+                    <li>Always put the <strong>larger table on the left</strong> side of the JOIN</li>
+                    <li>Filter both tables <strong>before</strong> the JOIN to reduce shuffle data</li>
+                    <li>If one table is small, use <code>SELECT ... FROM big_table JOIN small_table</code> — BigQuery auto-broadcasts</li>
+                    <li>Avoid <code>CROSS JOIN</code> unless absolutely necessary</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">7</span><span class="q-text">Difference between broadcast join and shuffle join.</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Aspect</th><th>Broadcast Join</th><th>Shuffle (Hash) Join</th></tr>
+                    <tr><td><strong>Mechanism</strong></td><td>Small table sent to all workers</td><td>Both tables redistributed by join key</td></tr>
+                    <tr><td><strong>Network I/O</strong></td><td>Low — only small table is moved</td><td>High — both tables shuffled across network</td></tr>
+                    <tr><td><strong>Speed</strong></td><td>Fast — no shuffling of large table</td><td>Slower — expensive shuffle step</td></tr>
+                    <tr><td><strong>When used</strong></td><td>One side is ≤ ~10 MB</td><td>Both sides are large</td></tr>
+                    <tr><td><strong>Visible in</strong></td><td>Execution plan shows <code>BROADCAST</code></td><td>Execution plan shows <code>HASH</code> or <code>REPARTITION</code></td></tr>
+                </table>
+                <div class="highlight">💡 <strong>10 TB + 1 GB join?</strong> BigQuery will broadcast the 1 GB table to all workers processing the 10 TB table. No hint needed — the optimizer handles it automatically.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">8</span><span class="q-text">What is the use of APPROX_* functions?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery provides approximate aggregation functions that trade a small accuracy margin (typically &lt;1%) for <strong>massive performance gains</strong>:</p>
+                <table>
+                    <tr><th>Function</th><th>Replaces</th><th>Use Case</th></tr>
+                    <tr><td><code>APPROX_COUNT_DISTINCT(col)</code></td><td><code>COUNT(DISTINCT col)</code></td><td>Cardinality estimation (unique users, sessions)</td></tr>
+                    <tr><td><code>APPROX_QUANTILES(col, n)</code></td><td>Exact percentile calculation</td><td>Median, P95, P99 computations</td></tr>
+                    <tr><td><code>APPROX_TOP_COUNT(col, n)</code></td><td>GROUP BY + ORDER BY + LIMIT</td><td>Top N most frequent values</td></tr>
+                    <tr><td><code>APPROX_TOP_SUM(col, weight, n)</code></td><td>Weighted top N</td><td>Top N by revenue, clicks</td></tr>
+                </table>
+                <p><strong>Performance:</strong> <code>APPROX_COUNT_DISTINCT</code> uses HyperLogLog++ algorithm — runs <strong>up to 10x faster</strong> and uses far less memory than exact <code>COUNT(DISTINCT)</code> on high-cardinality columns (millions of unique values).</p>
+                <div class="highlight">💡 <strong>When to use:</strong> Dashboards and analytics where ~99% accuracy is acceptable. <strong>When NOT to use:</strong> Financial reporting, billing, or any use case requiring exact counts.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">9</span><span class="q-text">How do you analyze query execution details?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Three main tools:</strong></p>
+                <ol>
+                    <li><strong>Query Execution Plan (Explanation)</strong> — visible in BigQuery UI after running a query. Shows stages, slots used, shuffle bytes, read/write ratios.</li>
+                    <li><strong>INFORMATION_SCHEMA.JOBS</strong> — query job metadata programmatically:</li>
+                </ol>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">SELECT
+  job_id,
+  total_bytes_processed / (1024*1024*1024) AS gb_scanned,
+  total_slot_ms / 1000 AS slot_seconds,
+  TIMESTAMP_DIFF(end_time, start_time, SECOND) AS wall_seconds,
+  cache_hit
+FROM `region-us`.INFORMATION_SCHEMA.JOBS
+WHERE creation_time > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 DAY)
+ORDER BY total_bytes_processed DESC
+LIMIT 20;</pre>
+                <ol start="3">
+                    <li><strong>Execution plan key metrics to watch:</strong></li>
+                </ol>
+                <ul>
+                    <li><strong>Slot time vs wall time ratio</strong> — high ratio = good parallelism</li>
+                    <li><strong>Shuffle bytes</strong> — high shuffle = large JOINs or GROUP BYs redistributing data</li>
+                    <li><strong>Spill to disk</strong> — indicates insufficient memory during aggregation</li>
+                    <li><strong>Input/output row ratio</strong> — stages reading many rows but outputting few = filter is working well</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="callout warn">
+            <span>⚠️</span>
+            <div contenteditable="true"><strong>Cost Trap:</strong> <code>SELECT *</code> scans all columns. In columnar storage, only selecting needed columns can reduce cost by 90%+. Always use column pruning and partition filters.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 4: SQL & FUNCTIONS -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-purple" id="sql-functions">
+        <div class="section-header">
+            <div class="section-icon">🟣</div>
+            <h2 contenteditable="true">SQL &amp; BigQuery Functions</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'sql-functions')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">Difference between STRUCT and ARRAY.</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Feature</th><th>STRUCT</th><th>ARRAY</th></tr>
+                    <tr><td><strong>What it is</strong></td><td>A group of named fields (like a row/object)</td><td>An ordered list of values of the same type</td></tr>
+                    <tr><td><strong>Analogy</strong></td><td>A JSON object: <code>{"name":"Alice", "age":30}</code></td><td>A JSON array: <code>[1, 2, 3]</code></td></tr>
+                    <tr><td><strong>Access</strong></td><td>Dot notation: <code>col.field_name</code></td><td><code>UNNEST()</code> to flatten, or <code>col[OFFSET(0)]</code> for index</td></tr>
+                    <tr><td><strong>Nesting</strong></td><td>Can contain ARRAYs and other STRUCTs</td><td>Can contain STRUCTs (ARRAY of STRUCT = repeated record)</td></tr>
+                    <tr><td><strong>Use case</strong></td><td>Grouping related fields (address, metadata)</td><td>One-to-many relationships (order items, tags, events)</td></tr>
+                </table>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- STRUCT example
+SELECT STRUCT("Alice" AS name, 30 AS age) AS person;
+
+-- ARRAY example
+SELECT [1, 2, 3] AS numbers;
+
+-- ARRAY of STRUCT (most common in BigQuery)
+SELECT ARRAY&lt;STRUCT&lt;item STRING, qty INT64&gt;&gt;[
+  ("Widget", 5), ("Gadget", 3)
+] AS order_items;</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">How do you UNNEST arrays?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><code>UNNEST()</code> converts an ARRAY into rows — essentially a cross join that expands each array element into its own row.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Simple UNNEST
+SELECT val
+FROM UNNEST([10, 20, 30]) AS val;
+-- Result: 3 rows → 10, 20, 30
+
+-- UNNEST with parent table (correlated)
+SELECT
+  o.order_id,
+  item.product,
+  item.qty
+FROM `orders` o,
+UNNEST(o.items) AS item;    -- items is ARRAY&lt;STRUCT&gt;
+
+-- LEFT JOIN UNNEST (keep rows even if array is empty)
+SELECT o.order_id, item.product
+FROM `orders` o
+LEFT JOIN UNNEST(o.items) AS item;</pre>
+                <div class="highlight">💡 <strong>Key Difference:</strong> <code>FROM table, UNNEST(col)</code> is an implicit CROSS JOIN — rows with empty arrays are dropped. Use <code>LEFT JOIN UNNEST</code> to preserve them.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">Difference between SAFE_CAST and CAST.</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th></th><th>CAST</th><th>SAFE_CAST</th></tr>
+                    <tr><td><strong>On failure</strong></td><td>Query fails with error</td><td>Returns <code>NULL</code></td></tr>
+                    <tr><td><strong>Use when</strong></td><td>Data is clean and should always cast successfully</td><td>Data may have bad values (dirty columns, mixed types)</td></tr>
+                </table>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- CAST fails on bad data
+SELECT CAST("abc" AS INT64);  -- ERROR!
+
+-- SAFE_CAST returns NULL
+SELECT SAFE_CAST("abc" AS INT64);  -- NULL
+
+-- Practical: clean dirty data
+SELECT
+  id,
+  SAFE_CAST(amount_str AS NUMERIC) AS amount,
+FROM raw_data
+WHERE SAFE_CAST(amount_str AS NUMERIC) IS NOT NULL;  -- filter bad rows</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">What is ANY_VALUE() and when should you use it?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><code>ANY_VALUE(col)</code> returns an <strong>arbitrary value</strong> from the group. It tells BigQuery: "I know all values in this group are the same, just pick one."</p>
+                <p><strong>When to use:</strong></p>
+                <ul>
+                    <li>You're grouping by a key, and a non-aggregated column has the same value for all rows in each group</li>
+                    <li>Without <code>ANY_VALUE</code>, BigQuery forces you to either add it to <code>GROUP BY</code> or use an aggregate like <code>MAX</code></li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Problem: user_name isn't in GROUP BY
+SELECT user_id, user_name, COUNT(*) AS orders   -- ERROR!
+FROM orders GROUP BY user_id;
+
+-- Fix 1: ANY_VALUE (cleanest when name is same per user)
+SELECT user_id, ANY_VALUE(user_name) AS user_name, COUNT(*) AS orders
+FROM orders GROUP BY user_id;
+
+-- Fix 2: Add to GROUP BY (works but can affect performance)
+SELECT user_id, user_name, COUNT(*) AS orders
+FROM orders GROUP BY user_id, user_name;</pre>
+                <div class="highlight">💡 <strong>Performance:</strong> <code>ANY_VALUE</code> avoids adding columns to GROUP BY, which can reduce shuffle and improve performance on large datasets.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">What is SELECT * EXCEPT?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>A BigQuery-specific syntax that selects <strong>all columns except</strong> the ones you list. Useful when a table has many columns and you want to exclude a few.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Select everything except sensitive columns
+SELECT * EXCEPT(ssn, password_hash)
+FROM users;
+
+-- Combined with REPLACE to transform a column
+SELECT * REPLACE(UPPER(name) AS name)
+FROM users;
+
+-- Both together
+SELECT * EXCEPT(temp_col) REPLACE(ROUND(amount, 2) AS amount)
+FROM transactions;</pre>
+                <div class="highlight">⚠️ <strong>Note:</strong> <code>SELECT * EXCEPT</code> still scans all remaining columns. It doesn't help with cost as much as explicitly listing only needed columns.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">6</span><span class="q-text">How does QUALIFY work?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><code>QUALIFY</code> filters the result of <strong>window functions</strong> — just like <code>HAVING</code> filters aggregations. It eliminates the need for a subquery.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- WITHOUT QUALIFY (subquery needed)
+SELECT * FROM (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts DESC) AS rn
+  FROM events
+) WHERE rn = 1;
+
+-- WITH QUALIFY (clean, no subquery)
+SELECT *
+FROM events
+QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts DESC) = 1;</pre>
+                <p><strong>SQL execution order with QUALIFY:</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">FROM → WHERE → GROUP BY → HAVING → WINDOW → QUALIFY → ORDER BY → LIMIT</pre>
+                <div class="highlight">💡 <strong>Common Pattern:</strong> Deduplication — <code>QUALIFY ROW_NUMBER() OVER (PARTITION BY key ORDER BY ts DESC) = 1</code> keeps the latest record per key.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">7</span><span class="q-text">Difference between RANK(), DENSE_RANK(), and ROW_NUMBER().</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>All three are window functions that assign numbers to rows within a partition. The difference is how they handle <strong>ties</strong>:</p>
+                <table>
+                    <tr><th>Score</th><th>ROW_NUMBER()</th><th>RANK()</th><th>DENSE_RANK()</th></tr>
+                    <tr><td>100</td><td>1</td><td>1</td><td>1</td></tr>
+                    <tr><td>95</td><td>2</td><td>2</td><td>2</td></tr>
+                    <tr><td>95</td><td>3</td><td>2</td><td>2</td></tr>
+                    <tr><td>90</td><td>4</td><td><strong>4</strong> (skips 3)</td><td><strong>3</strong> (no gap)</td></tr>
+                </table>
+                <ul>
+                    <li><strong>ROW_NUMBER()</strong> — always unique, arbitrary tiebreak. Best for deduplication.</li>
+                    <li><strong>RANK()</strong> — same value = same rank, then skips. "1st, 2nd, 2nd, 4th".</li>
+                    <li><strong>DENSE_RANK()</strong> — same value = same rank, no skip. "1st, 2nd, 2nd, 3rd".</li>
+                </ul>
+                <div class="highlight">💡 <strong>Interview tip:</strong> Always specify what you need: Use <code>ROW_NUMBER()</code> for dedup, <code>RANK()</code> for competition ranking, <code>DENSE_RANK()</code> for top-N with ties.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">8</span><span class="q-text">How do you handle NULLs in BigQuery?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery follows the SQL standard for NULLs. Key behaviors:</p>
+                <ul>
+                    <li><code>NULL = NULL</code> → <code>NULL</code> (not TRUE!) — use <code>IS NULL</code> / <code>IS NOT NULL</code></li>
+                    <li><code>NULL</code> in aggregation — most aggregate functions ignore NULLs (<code>SUM</code>, <code>AVG</code>, <code>COUNT(col)</code>)</li>
+                    <li><code>COUNT(*)</code> counts all rows; <code>COUNT(col)</code> skips NULLs</li>
+                </ul>
+                <p><strong>Useful NULL-handling functions:</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">IFNULL(col, default)       -- returns default if col is NULL
+COALESCE(a, b, c)          -- returns first non-NULL value
+NULLIF(a, b)               -- returns NULL if a = b, else a
+IF(condition, val, NULL)   -- conditional NULL
+SAFE_DIVIDE(a, b)          -- returns NULL instead of division-by-zero error</pre>
+                <div class="highlight">💡 <strong>NULL in JOINs:</strong> <code>NULL</code> values never match in JOIN conditions. If you need to join on nullable columns, use <code>IFNULL(col, sentinel)</code> or <code>COALESCE</code>.</div>
+            </div>
+        </div>
+
+        <div class="callout tip">
+            <span>💡</span>
+            <div contenteditable="true"><strong>QUALIFY</strong> filters window function results without a subquery: <code>SELECT * FROM t QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY ts DESC) = 1</code></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 5: ARCHITECTURE & INTERNALS -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-red" id="architecture">
+        <div class="section-header">
+            <div class="section-icon">🔴</div>
+            <h2 contenteditable="true">BigQuery Architecture &amp; Internals</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'architecture')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">How does BigQuery handle scalability?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery achieves massive scalability through <strong>separation of compute and storage</strong> and multi-tenant architecture:</p>
+                <ul>
+                    <li><strong>Storage (Colossus)</strong> — scales independently to petabytes. You pay $0.02/GB/month for active storage, $0.01/GB for long-term (&gt;90 days untouched).</li>
+                    <li><strong>Compute (Dremel)</strong> — dynamically allocates thousands of workers per query. A single query can use 2,000+ slots in parallel.</li>
+                    <li><strong>Network (Jupiter)</strong> — 1 Pb/s bisection bandwidth between compute and storage, so separation doesn't create a bottleneck.</li>
+                    <li><strong>Multi-tenancy</strong> — on-demand users share a massive global slot pool. Google manages utilization across millions of users.</li>
+                    <li><strong>Automatic sharding</strong> — data is automatically split into optimal-sized blocks across Colossus. No manual sharding needed.</li>
+                </ul>
+                <div class="highlight">💡 <strong>Key Insight:</strong> BigQuery can scale from scanning 1 MB to 1 PB without any configuration change. You don't resize clusters — you just run the query.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">What is Dremel?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Dremel</strong> is Google's internal query execution engine — the core technology behind BigQuery.</p>
+                <p><strong>Key characteristics:</strong></p>
+                <ul>
+                    <li><strong>Tree architecture</strong> — queries are distributed through a serving tree: root server → intermediate servers → leaf servers (workers)</li>
+                    <li><strong>Columnar execution</strong> — operates directly on compressed columnar data without decompressing entire rows</li>
+                    <li><strong>In-situ querying</strong> — reads data where it lives (Colossus/GCS) without requiring data to be imported first</li>
+                    <li><strong>Multi-level execution</strong> — each tree level aggregates partial results, reducing data movement</li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">            Root Server
+           /    |    \
+      Mixer   Mixer   Mixer      ← intermediate aggregation
+      / \      / \      / \
+    Leaf Leaf Leaf Leaf Leaf Leaf ← read data from Colossus</pre>
+                <div class="highlight">💡 <strong>History:</strong> Dremel was published in a <a href="https://research.google/pubs/pub36632/" style="color:var(--accent);">2010 Google research paper</a>. It inspired Apache Drill and other distributed SQL engines.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">What is Capacitor?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Capacitor</strong> is BigQuery's proprietary <strong>columnar storage format</strong> — think of it as Google's equivalent to Apache Parquet or ORC, but optimized for BigQuery's architecture.</p>
+                <p><strong>Key features:</strong></p>
+                <ul>
+                    <li><strong>Column-oriented</strong> — each column stored separately for efficient scanning</li>
+                    <li><strong>Encoding per column</strong> — dictionary encoding, run-length encoding, delta encoding chosen automatically per column's data characteristics</li>
+                    <li><strong>Nested data support</strong> — natively handles STRUCT and ARRAY types using definition/repetition levels (from Dremel paper)</li>
+                    <li><strong>Block metadata</strong> — stores min/max values, null counts per block for partition/block pruning</li>
+                    <li><strong>Encryption</strong> — all data encrypted at rest with AES-256 by default</li>
+                </ul>
+                <div class="highlight">💡 <strong>You never interact with Capacitor directly.</strong> It's an internal format. Data is automatically converted to Capacitor on ingestion (from CSV, JSON, Avro, Parquet, etc.).</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">How does BigQuery manage fault tolerance?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery provides fault tolerance at multiple layers:</p>
+                <ul>
+                    <li><strong>Storage (Colossus)</strong> — data is automatically replicated across multiple zones and data centers. No single point of failure.</li>
+                    <li><strong>Compute (Dremel)</strong> — if a worker fails mid-query, the scheduler reassigns that worker's task to another worker. The query continues without the user noticing.</li>
+                    <li><strong>Checkpointing</strong> — long-running queries checkpoint intermediate results, so a failure doesn't restart from scratch.</li>
+                    <li><strong>Shuffle persistence</strong> — shuffle data (intermediate results between stages) is written to a persistent shuffle service, surviving individual worker failures.</li>
+                    <li><strong>Regional redundancy</strong> — multi-region datasets are replicated across geographic regions for disaster recovery.</li>
+                </ul>
+                <div class="highlight">💡 <strong>SLA:</strong> BigQuery offers 99.99% uptime SLA for multi-region deployments and 99.9% for single-region.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">How does BigQuery handle schema changes?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery supports <strong>limited schema evolution</strong> without downtime:</p>
+                <table>
+                    <tr><th>Operation</th><th>Supported?</th><th>How</th></tr>
+                    <tr><td><strong>Add new columns</strong></td><td>✅ Yes</td><td><code>ALTER TABLE ADD COLUMN</code> or schema auto-detect on load</td></tr>
+                    <tr><td><strong>Relax column mode</strong></td><td>✅ Yes</td><td>REQUIRED → NULLABLE only</td></tr>
+                    <tr><td><strong>Rename column</strong></td><td>✅ Yes (since 2023)</td><td><code>ALTER TABLE RENAME COLUMN old TO new</code></td></tr>
+                    <tr><td><strong>Change column type</strong></td><td>✅ Limited</td><td><code>ALTER TABLE ALTER COLUMN SET DATA TYPE</code> for widening casts (INT64 → NUMERIC)</td></tr>
+                    <tr><td><strong>Delete column</strong></td><td>✅ Yes</td><td><code>ALTER TABLE DROP COLUMN</code></td></tr>
+                    <tr><td><strong>Reorder columns</strong></td><td>❌ No</td><td>Recreate table with desired order</td></tr>
+                </table>
+                <div class="highlight">💡 <strong>Best Practice:</strong> Always add new columns as <code>NULLABLE</code>. Existing rows get <code>NULL</code> for the new column. Never add as <code>REQUIRED</code> unless you're creating a brand new table.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">6</span><span class="q-text">What is time travel in BigQuery?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Time travel</strong> lets you query a table's data at any point within the last <strong>7 days</strong> (configurable from 2 to 7 days), even if data was modified or deleted.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Query table as it was 1 hour ago
+SELECT * FROM `project.dataset.table`
+FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR);
+
+-- Query table at a specific timestamp
+SELECT * FROM `project.dataset.table`
+FOR SYSTEM_TIME AS OF '2026-04-21 10:00:00 UTC';
+
+-- Restore accidentally deleted data
+INSERT INTO `project.dataset.table`
+SELECT * FROM `project.dataset.table`
+FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 MINUTE);</pre>
+                <p><strong>Use cases:</strong> undo accidental DELETEs/UPDATEs, audit data changes, debug pipeline issues, restore tables.</p>
+                <div class="highlight">⚠️ <strong>Important:</strong> Time travel has a storage cost — BigQuery keeps changed/deleted data for the time travel window. Configure with: <code>ALTER TABLE t SET OPTIONS (max_staleness = INTERVAL 3 DAY)</code></div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">7</span><span class="q-text">What are table snapshots?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>A <strong>table snapshot</strong> is a read-only, point-in-time copy of a table. It captures the table's state at a specific moment.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Create snapshot of current state
+CREATE SNAPSHOT TABLE `project.dataset.orders_snapshot`
+CLONE `project.dataset.orders`;
+
+-- Create snapshot at a specific time (within time travel window)
+CREATE SNAPSHOT TABLE `project.dataset.orders_snap_april20`
+CLONE `project.dataset.orders`
+FOR SYSTEM_TIME AS OF '2026-04-20 00:00:00 UTC';</pre>
+                <p><strong>Properties:</strong></p>
+                <ul>
+                    <li>Read-only — cannot be modified</li>
+                    <li>Minimal storage cost — only stores metadata + deltas from the base table</li>
+                    <li>Can be used to restore tables: <code>CREATE OR REPLACE TABLE orders CLONE orders_snapshot</code></li>
+                    <li>Retained beyond the 7-day time travel window</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">8</span><span class="q-text">Difference between CLONE and COPY.</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Feature</th><th>CLONE</th><th>COPY</th></tr>
+                    <tr><td><strong>Command</strong></td><td><code>CREATE TABLE t2 CLONE t1</code></td><td><code>CREATE TABLE t2 COPY t1</code> or <code>bq cp</code></td></tr>
+                    <tr><td><strong>Storage</strong></td><td><strong>Zero-copy</strong> — metadata only at creation. Storage cost only for diverging data after clone.</td><td><strong>Full copy</strong> — all data duplicated. Full storage cost immediately.</td></tr>
+                    <tr><td><strong>Speed</strong></td><td>Instant (seconds regardless of table size)</td><td>Proportional to table size</td></tr>
+                    <tr><td><strong>Independence</strong></td><td>Fully writable. Changes don't affect source.</td><td>Fully independent copy.</td></tr>
+                    <tr><td><strong>Time travel</strong></td><td>Can clone from a point in time: <code>CLONE t1 FOR SYSTEM_TIME AS OF ...</code></td><td>Copies current state only</td></tr>
+                    <tr><td><strong>Use case</strong></td><td>Dev/test copies, backups, branching data</td><td>Cross-region copies, permanent archives</td></tr>
+                    <tr><td><strong>Cross-region</strong></td><td>❌ Same region only</td><td>✅ Can copy across regions</td></tr>
+                </table>
+                <div class="highlight">💡 <strong>Always prefer CLONE</strong> for same-region copies. It's instant and costs nothing until you start modifying the cloned table.</div>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span>ℹ️</span>
+            <div contenteditable="true"><strong>Time Travel:</strong> BigQuery keeps data for up to <strong>7 days</strong> (configurable). Use <code>FOR SYSTEM_TIME AS OF</code> to query historical data. <strong>CLONE</strong> is zero-copy, while <strong>COPY</strong> duplicates actual data.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 6: DATA MODELING -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-orange" id="data-modeling">
+        <div class="section-header">
+            <div class="section-icon">🟠</div>
+            <h2 contenteditable="true">BigQuery Data Modeling</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'data-modeling')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">When should you use denormalization in BigQuery?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Almost always.</strong> Unlike traditional RDBMS where normalization reduces redundancy, BigQuery favors <strong>denormalized (flat/wide)</strong> tables because:</p>
+                <ul>
+                    <li><strong>JOINs are expensive</strong> — they require shuffling large datasets across workers</li>
+                    <li><strong>Columnar storage handles wide tables efficiently</strong> — unused columns aren't scanned</li>
+                    <li><strong>Storage is cheap</strong> ($0.02/GB/month) — redundancy costs less than repeated JOIN compute</li>
+                    <li><strong>Nested/repeated fields</strong> (STRUCT + ARRAY) let you denormalize without full flattening</li>
+                </ul>
+                <p><strong>When to keep normalized:</strong></p>
+                <ul>
+                    <li>Dimension tables that change frequently (avoid updating across many denormalized rows)</li>
+                    <li>Very small lookup tables (broadcast joins are cheap)</li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Instead of: orders JOIN customers JOIN products (3-way join)
+-- Denormalize into a single wide table:
+CREATE TABLE analytics.order_facts AS
+SELECT
+  o.order_id, o.order_date, o.amount,
+  c.customer_name, c.country,        -- denormalized from customers
+  p.product_name, p.category          -- denormalized from products
+FROM orders o
+JOIN customers c USING(customer_id)
+JOIN products p USING(product_id);</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">How do you model event-based data?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>Event data (clickstreams, transactions, logs) is naturally append-only. Recommended approach:</p>
+                <ul>
+                    <li><strong>Partition by event date</strong> — <code>PARTITION BY DATE(event_timestamp)</code></li>
+                    <li><strong>Cluster by high-cardinality filters</strong> — <code>CLUSTER BY user_id, event_type</code></li>
+                    <li><strong>Nest event properties</strong> — use <code>STRUCT</code> for event metadata, <code>ARRAY&lt;STRUCT&gt;</code> for sub-events</li>
+                    <li><strong>Use streaming inserts or Storage Write API</strong> for real-time ingestion</li>
+                    <li><strong>Set table expiration</strong> for short-lived staging events</li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">CREATE TABLE events (
+  event_id STRING,
+  event_ts TIMESTAMP,
+  user_id INT64,
+  event_type STRING,
+  properties STRUCT&lt;
+    page STRING,
+    referrer STRING,
+    duration_ms INT64
+  &gt;,
+  tags ARRAY&lt;STRING&gt;
+)
+PARTITION BY DATE(event_ts)
+CLUSTER BY user_id, event_type;</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">How do you handle slowly changing dimensions?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>SCD (Slowly Changing Dimensions)</strong> in BigQuery — common strategies:</p>
+                <table>
+                    <tr><th>Type</th><th>Strategy</th><th>BigQuery Implementation</th></tr>
+                    <tr><td><strong>SCD1 (Overwrite)</strong></td><td>Always keep latest value</td><td><code>MERGE ... WHEN MATCHED THEN UPDATE</code></td></tr>
+                    <tr><td><strong>SCD2 (History)</strong></td><td>Keep full history with effective dates</td><td>Add <code>effective_from</code>, <code>effective_to</code>, <code>is_current</code> columns. Use MERGE to close old record and insert new one.</td></tr>
+                    <tr><td><strong>SCD3 (Previous value)</strong></td><td>Store current + previous value</td><td>Add <code>prev_value</code> column. UPDATE current, shift old to prev.</td></tr>
+                    <tr><td><strong>Snapshot</strong></td><td>Full snapshot per day</td><td>Partition by snapshot_date. Simplest but storage-heavy.</td></tr>
+                </table>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- SCD2 with MERGE
+MERGE dim_customer T
+USING staging S ON T.customer_id = S.customer_id AND T.is_current = TRUE
+-- Close existing record
+WHEN MATCHED AND T.address != S.address THEN
+  UPDATE SET T.effective_to = CURRENT_DATE(), T.is_current = FALSE
+-- Insert new current record (done separately after closing)
+WHEN NOT MATCHED THEN
+  INSERT (customer_id, address, effective_from, effective_to, is_current)
+  VALUES (S.customer_id, S.address, CURRENT_DATE(), DATE '9999-12-31', TRUE);</pre>
+                <div class="highlight">💡 <strong>BigQuery preference:</strong> Daily snapshots (partition by date) are simplest and work well since storage is cheap. SCD2 is better when storage efficiency matters.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">How do you store nested JSON?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Two approaches:</strong></p>
+                <ul>
+                    <li><strong>Native nested types (STRUCT + ARRAY)</strong> — preferred. Schema is enforced, individual fields are scannable, and columnar compression works per field.</li>
+                    <li><strong>JSON STRING column</strong> — store raw JSON as string. Flexible but requires <code>JSON_EXTRACT_SCALAR()</code> at query time, no column pruning, poor performance.</li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Approach 1: STRUCT + ARRAY (recommended)
+CREATE TABLE orders (
+  order_id STRING,
+  customer STRUCT&lt;name STRING, email STRING&gt;,
+  items ARRAY&lt;STRUCT&lt;product STRING, qty INT64, price NUMERIC&gt;&gt;
+);
+
+-- Query nested fields directly
+SELECT customer.name, item.product, item.price
+FROM orders, UNNEST(items) AS item;
+
+-- Approach 2: JSON string (flexible but slow)
+CREATE TABLE raw_events (
+  event_id STRING,
+  payload STRING  -- raw JSON
+);
+
+SELECT JSON_EXTRACT_SCALAR(payload, '$.user.name') AS user_name
+FROM raw_events;</pre>
+                <p>Since 2022, BigQuery also supports the native <code>JSON</code> data type — a middle ground with semi-structured data support and dot-notation access.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">When should you use views vs materialized views?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Feature</th><th>View</th><th>Materialized View</th></tr>
+                    <tr><td><strong>Data storage</strong></td><td>None — just a saved query</td><td>Pre-computed result stored physically</td></tr>
+                    <tr><td><strong>Query cost</strong></td><td>Full cost every time (re-executes query)</td><td>Reduced cost — reads from cached result</td></tr>
+                    <tr><td><strong>Freshness</strong></td><td>Always current</td><td>Auto-refreshed (slight lag possible)</td></tr>
+                    <tr><td><strong>Maintenance</strong></td><td>None</td><td>Auto-maintained by BigQuery</td></tr>
+                    <tr><td><strong>Smart tuning</strong></td><td>No</td><td>Yes — optimizer can rewrite queries to use materialized view even if not directly queried</td></tr>
+                    <tr><td><strong>SQL restrictions</strong></td><td>Any valid SQL</td><td>Limited — no JOINs across tables (recently relaxed), no UNION, no subqueries in some cases</td></tr>
+                    <tr><td><strong>Best for</strong></td><td>Access control (authorized views), reusable logic</td><td>Expensive aggregations queried repeatedly (dashboards)</td></tr>
+                </table>
+                <div class="highlight">💡 <strong>Rule:</strong> Use views for <strong>logic reuse and access control</strong>. Use materialized views for <strong>performance optimization of frequent, expensive aggregations</strong>.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">6</span><span class="q-text">What are the limitations of materialized views?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Current limitations:</strong></p>
+                <ul>
+                    <li><strong>Single base table</strong> — can reference only one table (multi-table support is limited/preview)</li>
+                    <li><strong>Limited SQL</strong> — no UNION, no non-deterministic functions (<code>CURRENT_TIMESTAMP()</code>), no UDFs</li>
+                    <li><strong>Aggregation only</strong> — must include at least one aggregate function (COUNT, SUM, AVG, etc.)</li>
+                    <li><strong>No DML</strong> — cannot INSERT/UPDATE/DELETE directly on a materialized view</li>
+                    <li><strong>Max 20 per base table</strong></li>
+                    <li><strong>Refresh lag</strong> — not guaranteed to be up-to-the-second fresh (typically minutes)</li>
+                    <li><strong>Storage cost</strong> — you pay for storing the materialized result</li>
+                    <li><strong>Streaming buffer</strong> — data in the streaming buffer may not be reflected immediately</li>
+                </ul>
+                <div class="highlight">⚠️ <strong>Workaround:</strong> If you need a multi-table materialized view, create a scheduled query (via BigQuery Scheduled Queries) that writes results to a table on a defined schedule.</div>
+            </div>
+        </div>
+
+        <div class="callout tip">
+            <span>💡</span>
+            <div contenteditable="true"><strong>Denormalization is king in BigQuery.</strong> JOINs on large tables are expensive. Prefer nested/repeated fields (STRUCT + ARRAY) over normalized star schemas.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 7: STREAMING & INGESTION -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-brown" id="streaming">
+        <div class="section-header">
+            <div class="section-icon">🟤</div>
+            <h2 contenteditable="true">Streaming &amp; Ingestion</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'streaming')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">Difference between batch load and streaming insert.</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Aspect</th><th>Batch Load</th><th>Streaming Insert</th></tr>
+                    <tr><td><strong>Cost</strong></td><td><strong>Free</strong> (no charge for load jobs)</td><td>$0.01 per 200 MB ($0.05/GB)</td></tr>
+                    <tr><td><strong>Latency</strong></td><td>Seconds to minutes (job startup overhead)</td><td>Sub-second (data queryable immediately)</td></tr>
+                    <tr><td><strong>Method</strong></td><td><code>bq load</code>, <code>LOAD DATA</code>, or load from GCS</td><td><code>tabledata.insertAll</code> API or Storage Write API</td></tr>
+                    <tr><td><strong>Data availability</strong></td><td>Available after job completes</td><td>Immediately queryable (in streaming buffer)</td></tr>
+                    <tr><td><strong>Format support</strong></td><td>CSV, JSON, Avro, Parquet, ORC</td><td>JSON rows only (legacy). Storage Write API: protobuf.</td></tr>
+                    <tr><td><strong>DML after load</strong></td><td>Immediately available for UPDATE/DELETE</td><td>Data in streaming buffer can't be modified by DML for up to 90 min</td></tr>
+                    <tr><td><strong>Quota</strong></td><td>1,500 load jobs/table/day</td><td>1 GB/s per project (legacy), higher with Storage Write API</td></tr>
+                    <tr><td><strong>Best for</strong></td><td>ETL pipelines, bulk loads, backfills</td><td>Real-time analytics, event streams, IoT data</td></tr>
+                </table>
+                <div class="highlight">💡 <strong>Storage Write API (recommended since 2022):</strong> Replaces legacy streaming inserts. Offers exactly-once semantics, lower cost, higher throughput, and supports protobuf format.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">What is the streaming buffer?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>When you use streaming inserts, data first lands in a <strong>streaming buffer</strong> — a temporary, high-speed storage area within BigQuery.</p>
+                <p><strong>Characteristics:</strong></p>
+                <ul>
+                    <li>Data is <strong>immediately queryable</strong> after streaming</li>
+                    <li>Buffer retains data for approximately <strong>90 minutes</strong> before flushing to permanent columnar storage</li>
+                    <li>Data in the buffer is <strong>not subject to DML</strong> operations (UPDATE/DELETE)</li>
+                    <li>Shows as <strong>"Streaming buffer"</strong> in table details in the BigQuery UI</li>
+                    <li>The buffer is NOT backed by Capacitor format — it's in an optimized write format</li>
+                    <li>Table <strong>COPY</strong> and <strong>EXPORT</strong> operations may miss data in the buffer</li>
+                </ul>
+                <p><strong>Check streaming buffer status:</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Check if table has data in streaming buffer
+SELECT * FROM `project.dataset.INFORMATION_SCHEMA.TABLE_STORAGE`
+WHERE table_name = 'my_table';</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">Can you query data in the streaming buffer?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Yes</strong> — data is queryable within seconds of streaming. However, there are caveats:</p>
+                <ul>
+                    <li><strong>SELECT queries</strong> — work normally, buffer data is included in results</li>
+                    <li><strong>DML (UPDATE/DELETE)</strong> — <strong>cannot modify</strong> data still in the buffer. Wait ~90 min or until it flushes.</li>
+                    <li><strong>Time travel</strong> — buffer data is NOT included in <code>FOR SYSTEM_TIME AS OF</code> queries</li>
+                    <li><strong>Table wildcard queries</strong> — <code>table_*</code> queries include buffer data</li>
+                    <li><strong>COPY/EXPORT</strong> — may miss buffer data. Wait for buffer to flush before exporting.</li>
+                </ul>
+                <div class="highlight">💡 <strong>With Storage Write API's committed mode</strong>, data is immediately available for all operations including DML — no buffer delay.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">How do you handle duplicate records in streaming data?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Strategies from simplest to most robust:</strong></p>
+                <ol>
+                    <li><strong>insertId (legacy streaming)</strong> — pass a unique <code>insertId</code> per row. BigQuery does <strong>best-effort deduplication</strong> within the buffer (not guaranteed). Deprecated in favor of Storage Write API.</li>
+                    <li><strong>Storage Write API — committed mode</strong> — provides <strong>exactly-once semantics</strong> with stream offsets. Recommended approach.</li>
+                    <li><strong>Dedup at query time</strong> — use <code>QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY ts DESC) = 1</code> to pick one record per key.</li>
+                    <li><strong>MERGE periodically</strong> — run a scheduled MERGE to deduplicate from a staging table to the final table.</li>
+                    <li><strong>Dedup view</strong> — create a view with the QUALIFY dedup logic. Consumers always get clean data.</li>
+                </ol>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Dedup view pattern
+CREATE VIEW clean_events AS
+SELECT * FROM raw_events
+QUALIFY ROW_NUMBER() OVER (
+  PARTITION BY event_id ORDER BY ingestion_ts DESC
+) = 1;</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">What are the limits of streaming inserts?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Legacy streaming API limits:</strong></p>
+                <table>
+                    <tr><th>Limit</th><th>Value</th></tr>
+                    <tr><td>Max rows per request</td><td>50,000 (recommended: 500)</td></tr>
+                    <tr><td>Max row size</td><td>10 MB</td></tr>
+                    <tr><td>Max request size</td><td>10 MB</td></tr>
+                    <tr><td>Max throughput per table</td><td>1 GB/s</td></tr>
+                    <tr><td>Max throughput per project</td><td>1 GB/s (can be increased)</td></tr>
+                    <tr><td>insertId dedup window</td><td>~10 minutes (best-effort)</td></tr>
+                </table>
+                <p><strong>Storage Write API improvements:</strong></p>
+                <ul>
+                    <li>Higher throughput — 3 GB/s+ per table</li>
+                    <li>Exactly-once semantics (committed mode)</li>
+                    <li>Lower cost than legacy streaming</li>
+                    <li>No insertId needed — uses stream offsets</li>
+                    <li>Supports protobuf format (more efficient than JSON)</li>
+                </ul>
+                <div class="highlight">💡 <strong>Migration tip:</strong> If you're still using <code>tabledata.insertAll</code>, migrate to the <strong>Storage Write API</strong>. It's faster, cheaper, and provides better guarantees.</div>
+            </div>
+        </div>
+
+        <div class="callout info">
+            <span>ℹ️</span>
+            <div contenteditable="true"><strong>Streaming Buffer:</strong> Data is available for querying immediately but remains in the buffer for up to <strong>90 minutes</strong>. Batch loads are <strong>free</strong>; streaming inserts cost <strong>$0.01/200 MB</strong>. Use <strong>Storage Write API</strong> for modern streaming workloads.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 8: SECURITY & GOVERNANCE -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-dark" id="security">
+        <div class="section-header">
+            <div class="section-icon">⚫</div>
+            <h2 contenteditable="true">Security &amp; Governance</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'security')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">What is row-level security?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Row-level security (RLS)</strong> restricts which rows a user can see based on their identity. Implemented using <strong>Row Access Policies</strong>.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Create a policy: users can only see rows where region matches their group
+CREATE ROW ACCESS POLICY region_filter
+ON `project.dataset.sales`
+GRANT TO ('group:us-analysts@company.com')
+FILTER USING (region = 'US');
+
+-- Another policy for EU team
+CREATE ROW ACCESS POLICY eu_filter
+ON `project.dataset.sales`
+GRANT TO ('group:eu-analysts@company.com')
+FILTER USING (region = 'EU');
+
+-- Admins see everything
+CREATE ROW ACCESS POLICY admin_access
+ON `project.dataset.sales`
+GRANT TO ('group:data-admins@company.com')
+FILTER USING (TRUE);</pre>
+                <p><strong>Key details:</strong></p>
+                <ul>
+                    <li>Multiple policies per table — they combine with OR logic (user sees rows matching ANY of their policies)</li>
+                    <li>If a user has NO matching policy, they see <strong>zero rows</strong> (deny by default)</li>
+                    <li>Transparent to queries — users write normal SQL; filters are applied automatically</li>
+                    <li>Works with all query types including JOINs, aggregations, exports</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">What is column-level security?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Column-level security</strong> restricts access to specific columns using <strong>policy tags</strong> from <strong>Data Catalog</strong>.</p>
+                <p><strong>How it works:</strong></p>
+                <ol>
+                    <li>Create a <strong>taxonomy</strong> in Data Catalog (e.g., "Data Classification")</li>
+                    <li>Create <strong>policy tags</strong> within the taxonomy (e.g., "PII", "Confidential", "Public")</li>
+                    <li>Assign policy tags to table columns (e.g., <code>ssn</code> → PII, <code>salary</code> → Confidential)</li>
+                    <li>Grant <strong>Fine-Grained Reader</strong> role to users who should see protected columns</li>
+                </ol>
+                <p><strong>Behavior:</strong></p>
+                <ul>
+                    <li>Users <strong>without</strong> the Fine-Grained Reader role get an <strong>Access Denied</strong> error if they query a protected column</li>
+                    <li><code>SELECT *</code> also fails — user must explicitly exclude protected columns with <code>SELECT * EXCEPT(ssn)</code></li>
+                    <li>Works with authorized views — the view can access protected columns on behalf of the user</li>
+                </ul>
+                <div class="highlight">💡 <strong>Data masking (preview):</strong> Instead of full deny, you can configure <strong>data masking rules</strong> — users see masked values (e.g., <code>***-**-1234</code>) instead of being blocked entirely.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">How do authorized views work?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>An <strong>authorized view</strong> can query tables that the view's users don't have direct access to. The view acts as a security layer.</p>
+                <p><strong>How to set up:</strong></p>
+                <ol>
+                    <li>Create a view in dataset B that queries a table in dataset A</li>
+                    <li>In dataset A, add the view as an <strong>authorized view</strong> (dataset settings → Authorized Views)</li>
+                    <li>Grant users access to the view (dataset B), but NOT to dataset A's tables</li>
+                    <li>Users can query the view → it accesses dataset A's data on their behalf</li>
+                </ol>
+                <p><strong>Use cases:</strong></p>
+                <ul>
+                    <li>Share aggregated data without exposing raw tables</li>
+                    <li>Filter rows/columns based on business logic in the view</li>
+                    <li>Cross-dataset data sharing within an organization</li>
+                </ul>
+                <div class="highlight">💡 <strong>Authorized views bypass RLS?</strong> No — row access policies still apply. But the view can be used with column-level security to expose only permitted columns.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">Difference between IAM roles and dataset permissions.</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th>Aspect</th><th>IAM Roles (Project-level)</th><th>Dataset Permissions</th></tr>
+                    <tr><td><strong>Scope</strong></td><td>Entire GCP project</td><td>Specific dataset</td></tr>
+                    <tr><td><strong>Granularity</strong></td><td>Broad — all datasets in the project</td><td>Fine — only the specified dataset</td></tr>
+                    <tr><td><strong>Common roles</strong></td><td><code>roles/bigquery.admin</code>, <code>roles/bigquery.dataViewer</code>, <code>roles/bigquery.jobUser</code></td><td>READER, WRITER, OWNER on specific dataset</td></tr>
+                    <tr><td><strong>Best practice</strong></td><td>Use for project-wide access (admins, data engineers)</td><td>Use for restricting access to specific datasets (team-level data isolation)</td></tr>
+                </table>
+                <p><strong>Recommended permission hierarchy:</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">Project Level:
+  roles/bigquery.jobUser → everyone who needs to run queries
+
+Dataset Level:
+  roles/bigquery.dataViewer → read access to specific datasets
+  roles/bigquery.dataEditor → read + write to staging datasets
+
+Table Level:
+  Fine-Grained Reader → column-level access via policy tags
+  Row Access Policy → row-level filtering</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">How do you audit BigQuery access?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Three levels of auditing:</strong></p>
+                <ol>
+                    <li><strong>Cloud Audit Logs</strong> — automatically captures all BigQuery API calls:
+                        <ul>
+                            <li><strong>Admin Activity logs</strong> — table creation, schema changes, policy changes (always on, free)</li>
+                            <li><strong>Data Access logs</strong> — who queried what, when (must be enabled, can generate high volume)</li>
+                        </ul>
+                    </li>
+                    <li><strong>INFORMATION_SCHEMA</strong> — query job metadata programmatically:</li>
+                </ol>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Who queried what in the last 24 hours?
+SELECT
+  user_email,
+  query,
+  total_bytes_processed,
+  creation_time
+FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+WHERE creation_time > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 DAY)
+ORDER BY total_bytes_processed DESC;</pre>
+                <ol start="3">
+                    <li><strong>BigQuery Data Lineage</strong> — tracks data flow: which tables feed into which views/tables</li>
+                </ol>
+                <div class="highlight">💡 <strong>Cost tip:</strong> Data Access logs can be very high volume. Enable them selectively on sensitive datasets and export to a BigQuery sink for analysis.</div>
+            </div>
+        </div>
+
+        <div class="callout tip">
+            <span>💡</span>
+            <div contenteditable="true"><strong>Row-Level Security</strong> uses <code>CREATE ROW ACCESS POLICY</code>. <strong>Column-Level Security</strong> uses policy tags via Data Catalog. <strong>Authorized Views</strong> share data without exposing source tables.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 9: SCENARIO-BASED -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-fire" id="scenarios">
+        <div class="section-header">
+            <div class="section-icon">🔥</div>
+            <h2 contenteditable="true">Scenario-Based Questions (Interview Favorites)</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'scenarios')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">A query suddenly becomes expensive — how do you debug?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Step-by-step debugging approach:</strong></p>
+                <ol>
+                    <li><strong>Check bytes scanned</strong> — compare with historical runs in <code>INFORMATION_SCHEMA.JOBS</code>. Sudden increase = something bypassed pruning.</li>
+                    <li><strong>Check execution plan</strong> — look for full partition scans, high shuffle bytes, or spill-to-disk stages.</li>
+                    <li><strong>Verify partition filters</strong> — is the WHERE clause filtering on the partition column? Did a code change remove it?</li>
+                    <li><strong>Check for schema changes</strong> — new columns added? <code>SELECT *</code> now scans more data.</li>
+                    <li><strong>Check data volume</strong> — did the source table grow significantly? New data loaded?</li>
+                    <li><strong>Check clustering</strong> — if data wasn't reclustered after major loads, block pruning degrades.</li>
+                    <li><strong>Check for cross-join or Cartesian products</strong> — accidental cross joins explode row counts.</li>
+                    <li><strong>Check slot utilization</strong> — high <code>total_slot_ms</code> relative to wall time suggests contention.</li>
+                </ol>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Compare today's query cost vs 7 days ago
+SELECT
+  DATE(creation_time) AS day,
+  SUM(total_bytes_processed) / POW(1024,4) AS tb_scanned,
+  AVG(total_slot_ms) / 1000 AS avg_slot_sec
+FROM `region-us`.INFORMATION_SCHEMA.JOBS
+WHERE query LIKE '%my_table%'
+  AND creation_time > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+GROUP BY 1 ORDER BY 1;</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">A partitioned table is scanning all partitions — why?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Common causes:</strong></p>
+                <ol>
+                    <li><strong>No partition filter</strong> — query doesn't have a WHERE clause on the partition column</li>
+                    <li><strong>Function on partition column</strong> — <code>WHERE EXTRACT(YEAR FROM dt) = 2026</code> breaks pruning</li>
+                    <li><strong>Subquery-based filter</strong> — <code>WHERE dt = (SELECT MAX(dt) FROM ...)</code> may not be optimized</li>
+                    <li><strong>CTE obscures filter</strong> — partition filter applied after CTE materialization</li>
+                    <li><strong>OR conditions</strong> — <code>WHERE dt = '2026-01-01' OR user_id = 123</code> — the OR forces full scan</li>
+                    <li><strong>Wrong column</strong> — filtering on a non-partition column that looks similar</li>
+                    <li><strong>Dynamic table reference</strong> — using scripting/variables to build the filter</li>
+                </ol>
+                <p><strong>Prevention:</strong></p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Force partition filter requirement
+ALTER TABLE `project.dataset.my_table`
+SET OPTIONS (require_partition_filter = true);
+-- Now any query without a partition filter will FAIL</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">How would you design a cost-efficient ingestion pipeline?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Design principles:</strong></p>
+                <ul>
+                    <li><strong>Use batch loads when possible</strong> — free! Schedule with Cloud Composer/Airflow</li>
+                    <li><strong>Land data in GCS first</strong> → load from GCS into BigQuery (decouple ingestion from processing)</li>
+                    <li><strong>Use Parquet/Avro format</strong> — compressed, columnar, faster than CSV/JSON</li>
+                    <li><strong>Partition by date on load</strong> — use <code>--time_partitioning_field</code> in <code>bq load</code></li>
+                    <li><strong>Use Storage Write API for real-time needs</strong> — exactly-once, lower cost than legacy streaming</li>
+                    <li><strong>Separate raw/staging/curated layers</strong> — raw tables for ingestion, curated tables for analysis</li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">Architecture:
+Source → Cloud Pub/Sub → Dataflow → GCS (Parquet) → BQ Load Job → Raw Table
+                                                                        ↓
+                                              Scheduled Query → Curated Table (partitioned + clustered)
+                                                                        ↓
+                                                            Materialized View → Dashboard</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">You need to join a 10 TB table with a 1 GB table — how?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>BigQuery handles this automatically</strong> — the optimizer will use a <strong>broadcast join</strong>, sending the 1 GB table to all workers processing the 10 TB table.</p>
+                <p><strong>Best practices for this scenario:</strong></p>
+                <ul>
+                    <li><strong>Put the large table on the LEFT</strong> — <code>FROM big_table JOIN small_table</code></li>
+                    <li><strong>Filter before joining</strong> — reduce the 10 TB table with partition/where filters first</li>
+                    <li><strong>Verify in execution plan</strong> — check that the plan shows <code>BROADCAST</code> not <code>HASH</code></li>
+                    <li><strong>Consider denormalization</strong> — if this join runs daily, pre-join the small table into the large one</li>
+                </ul>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Optimal: filter large table first, then join
+SELECT o.*, c.customer_name
+FROM (
+  SELECT * FROM big_orders
+  WHERE order_date BETWEEN '2026-04-01' AND '2026-04-22'  -- prune partitions
+) o
+JOIN small_customers c USING(customer_id);  -- auto broadcast</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">How do you reprocess last 7 days of data efficiently?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Use partition-based overwrite</strong> to reprocess only the affected date range:</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Step 1: Delete affected partitions
+DELETE FROM `project.dataset.curated_table`
+WHERE event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY);
+
+-- Step 2: Re-insert from raw data
+INSERT INTO `project.dataset.curated_table`
+SELECT
+  event_date,
+  -- transformation logic here
+FROM `project.dataset.raw_table`
+WHERE event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY);
+
+-- Alternative: MERGE for upsert semantics
+MERGE curated T
+USING (SELECT ... FROM raw WHERE event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) S
+ON T.id = S.id AND T.event_date = S.event_date
+WHEN MATCHED THEN UPDATE SET ...
+WHEN NOT MATCHED THEN INSERT ...;</pre>
+                <div class="highlight">💡 <strong>Key:</strong> Always filter on the partition column in both DELETE and INSERT so only 7 partitions are touched, not the entire table.</div>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">6</span><span class="q-text">How do you archive old data cheaply?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Options ranked by cost-effectiveness:</strong></p>
+                <ol>
+                    <li><strong>Do nothing</strong> — BigQuery auto-moves untouched data to <strong>long-term storage</strong> after 90 days ($0.01/GB/month vs $0.02/GB for active). The cheapest option if you still need queryability.</li>
+                    <li><strong>Export to GCS + delete from BigQuery</strong> — export as Parquet to GCS Coldline/Archive storage ($0.004/GB/month). Create an external table if you need occasional access.</li>
+                    <li><strong>Use table snapshots</strong> — take a snapshot before archiving, then delete original data. Snapshot is read-only and cheap.</li>
+                    <li><strong>Partition expiration</strong> — auto-delete old partitions:</li>
+                </ol>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Auto-delete partitions older than 365 days
+ALTER TABLE project.dataset.events
+SET OPTIONS (partition_expiration_days = 365);
+
+-- Export to GCS before deleting
+EXPORT DATA OPTIONS (
+  uri = 'gs://archive-bucket/events/year=2024/*.parquet',
+  format = 'PARQUET', compression = 'SNAPPY'
+) AS
+SELECT * FROM events WHERE event_date < '2025-01-01';</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">7</span><span class="q-text">How do you handle late-arriving events?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Late-arriving events</strong> = events with an event timestamp earlier than the current processing window. Strategies:</p>
+                <ul>
+                    <li><strong>Use column-based partitioning on event_time</strong> — data goes to the correct historical partition, not "today's" partition</li>
+                    <li><strong>Reprocess window</strong> — always reprocess last N days (e.g., 3 days) in your ETL to catch late arrivals</li>
+                    <li><strong>MERGE pattern</strong> — upsert late events into the curated table, updating existing records or inserting new ones</li>
+                    <li><strong>Two-layer architecture</strong>:
+                        <ul>
+                            <li><code>raw</code> table — append-only, all events land here</li>
+                            <li><code>curated</code> table — rebuilt daily with dedup, covering a reprocessing window</li>
+                        </ul>
+                    </li>
+                    <li><strong>Watermark</strong> — define a "late threshold" (e.g., 72 hours). Events beyond the watermark are dropped or routed to a dead-letter table.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">8</span><span class="q-text">How would you migrate from Hive to BigQuery?</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Migration approach:</strong></p>
+                <ol>
+                    <li><strong>Assessment</strong> — inventory Hive tables, sizes, partition schemes, HQL scripts, dependencies</li>
+                    <li><strong>Schema mapping</strong>:
+                        <table>
+                            <tr><th>Hive</th><th>BigQuery</th></tr>
+                            <tr><td>Database</td><td>Dataset</td></tr>
+                            <tr><td>Partition (physical directories)</td><td>Partition (logical)</td></tr>
+                            <tr><td>Bucket</td><td>Clustering</td></tr>
+                            <tr><td>Map/Struct/Array</td><td>STRUCT/ARRAY</td></tr>
+                            <tr><td>External table (HDFS)</td><td>External table (GCS)</td></tr>
+                        </table>
+                    </li>
+                    <li><strong>Data transfer</strong>:
+                        <ul>
+                            <li>Export Hive tables as Parquet/Avro to GCS (via <code>distcp</code> or Dataproc)</li>
+                            <li>Load into BigQuery with <code>bq load</code> or <code>BigQuery Data Transfer Service</code></li>
+                        </ul>
+                    </li>
+                    <li><strong>SQL migration</strong> — convert HQL to BigQuery SQL:
+                        <ul>
+                            <li>Replace <code>LATERAL VIEW EXPLODE</code> → <code>UNNEST</code></li>
+                            <li>Replace <code>DISTRIBUTE BY/SORT BY</code> → <code>CLUSTER BY</code></li>
+                            <li>Replace UDFs with BigQuery UDFs or built-in functions</li>
+                        </ul>
+                    </li>
+                    <li><strong>Validation</strong> — row counts, checksums, sample data comparison</li>
+                    <li><strong>Cutover</strong> — parallel run both systems, compare results, then decommission Hive</li>
+                </ol>
+                <div class="highlight">💡 <strong>Google tool:</strong> <strong>BigQuery Migration Service</strong> (BQMS) automates SQL translation from Hive/Teradata/Redshift to BigQuery SQL.</div>
+            </div>
+        </div>
+
+        <div class="callout warn">
+            <span>⚠️</span>
+            <div contenteditable="true"><strong>Interview tip:</strong> For scenario questions, always structure your answer as: <strong>Diagnose → Root Cause → Solution → Prevention</strong>.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 10: SQL TRICKS -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-target" id="sql-tricks">
+        <div class="section-header">
+            <div class="section-icon">🎯</div>
+            <h2 contenteditable="true">Must-Know BigQuery SQL Tricks</h2>
+        </div>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'sql-tricks')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">Difference between WHERE and QUALIFY</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <table>
+                    <tr><th></th><th>WHERE</th><th>QUALIFY</th></tr>
+                    <tr><td><strong>Filters</strong></td><td>Row values (before aggregation/windowing)</td><td>Window function results (after windowing)</td></tr>
+                    <tr><td><strong>Execution order</strong></td><td>Early — before GROUP BY and window functions</td><td>Late — after window functions are computed</td></tr>
+                    <tr><td><strong>Can use</strong></td><td>Column values, expressions, subqueries</td><td>Window functions: ROW_NUMBER, RANK, SUM OVER, etc.</td></tr>
+                </table>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- WHERE: filter rows before windowing
+SELECT * FROM events WHERE event_type = 'purchase';
+
+-- QUALIFY: filter AFTER window function runs
+SELECT * FROM events
+QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts DESC) = 1;
+
+-- Combined: WHERE filters first, then QUALIFY deduplicates
+SELECT * FROM events
+WHERE event_type = 'purchase'
+QUALIFY ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts DESC) = 1;</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">Use of TABLESAMPLE</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><code>TABLESAMPLE</code> reads a random subset of data, <strong>reducing bytes scanned and cost</strong>. Great for exploratory queries on huge tables.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Sample ~10% of the table
+SELECT * FROM `big_table` TABLESAMPLE SYSTEM (10 PERCENT);
+
+-- Sample for quick profiling
+SELECT
+  COUNT(*) AS sample_rows,
+  AVG(amount) AS avg_amount,
+  MIN(event_date) AS min_date,
+  MAX(event_date) AS max_date
+FROM `project.dataset.events` TABLESAMPLE SYSTEM (1 PERCENT);</pre>
+                <p><strong>Important:</strong> TABLESAMPLE operates at the <strong>storage block level</strong>, not row level. The actual percentage may vary slightly. Not suitable for exact random samples — use <code>ORDER BY RAND() LIMIT n</code> for that (but it scans the full table).</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">How to detect data skew</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Data skew</strong> = uneven distribution of data across partitions or join keys, causing some workers to process disproportionately more data.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Detect skew on partition sizes
+SELECT partition_id, total_rows, total_logical_bytes
+FROM `project.dataset.INFORMATION_SCHEMA.PARTITIONS`
+WHERE table_name = 'my_table'
+ORDER BY total_logical_bytes DESC;
+
+-- Detect skew on join key distribution
+SELECT
+  join_key,
+  COUNT(*) AS row_count,
+  COUNT(*) * 100.0 / SUM(COUNT(*)) OVER() AS pct
+FROM my_table
+GROUP BY join_key
+ORDER BY row_count DESC
+LIMIT 20;
+
+-- Check for NULL key skew (NULLs all hash to same bucket)
+SELECT COUNT(*) AS null_rows FROM my_table WHERE join_key IS NULL;</pre>
+                <p><strong>Signs in execution plan:</strong> One stage takes much longer than others. One worker processes 10x more data.</p>
+                <p><strong>Fix:</strong> Filter out NULLs before JOINs, split hot keys into separate processing, or use APPROX functions.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">How to flatten nested fields</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Access STRUCT fields directly with dot notation
+SELECT
+  order_id,
+  customer.name AS customer_name,      -- STRUCT field
+  customer.address.city AS city         -- nested STRUCT
+FROM orders;
+
+-- Flatten ARRAY of STRUCT with UNNEST
+SELECT
+  o.order_id,
+  item.product_name,
+  item.quantity,
+  item.unit_price
+FROM orders o,
+UNNEST(o.line_items) AS item;           -- ARRAY&lt;STRUCT&gt;
+
+-- Flatten ARRAY of primitives with OFFSET
+SELECT
+  id,
+  tag,
+  offset_idx
+FROM my_table,
+UNNEST(tags) AS tag WITH OFFSET AS offset_idx;
+
+-- Re-aggregate after flattening
+SELECT
+  o.order_id,
+  SUM(item.quantity * item.unit_price) AS total
+FROM orders o, UNNEST(o.line_items) AS item
+GROUP BY o.order_id;</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">Use of WITH OFFSET</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><code>WITH OFFSET</code> gives you the <strong>index position</strong> of each element when unnesting an array.</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Get array elements with their index
+SELECT
+  id,
+  element,
+  idx
+FROM my_table,
+UNNEST(my_array) AS element WITH OFFSET AS idx
+ORDER BY id, idx;
+
+-- Example: first and last element of an array
+SELECT
+  id,
+  arr[OFFSET(0)] AS first_element,              -- 0-based index
+  arr[ORDINAL(ARRAY_LENGTH(arr))] AS last_element -- 1-based index
+FROM my_table;
+
+-- Filter by position: get only the 2nd element
+SELECT id, element
+FROM my_table, UNNEST(my_array) AS element WITH OFFSET AS idx
+WHERE idx = 1;  -- 0-based → idx=1 is 2nd element</pre>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">6</span><span class="q-text">How to generate sequences in BigQuery</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery has no <code>generate_series()</code>, but you can use <code>UNNEST + GENERATE_ARRAY</code>:</p>
+                <pre style="background:#f1f5f9; padding:12px; border-radius:6px; font-size:0.82rem; margin:8px 0;">-- Generate numbers 1 to 100
+SELECT num FROM UNNEST(GENERATE_ARRAY(1, 100)) AS num;
+
+-- Generate date sequence
+SELECT date
+FROM UNNEST(
+  GENERATE_DATE_ARRAY('2026-01-01', '2026-12-31', INTERVAL 1 DAY)
+) AS date;
+
+-- Generate timestamp sequence (every hour for a day)
+SELECT ts
+FROM UNNEST(
+  GENERATE_TIMESTAMP_ARRAY(
+    '2026-04-22 00:00:00 UTC',
+    '2026-04-22 23:00:00 UTC',
+    INTERVAL 1 HOUR
+  )
+) AS ts;
+
+-- Practical: fill date gaps in a report
+WITH dates AS (
+  SELECT date FROM UNNEST(GENERATE_DATE_ARRAY('2026-01-01', CURRENT_DATE())) AS date
+)
+SELECT d.date, COALESCE(SUM(o.amount), 0) AS daily_total
+FROM dates d
+LEFT JOIN orders o ON o.order_date = d.date
+GROUP BY d.date ORDER BY d.date;</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 11: TOP 10 -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-fire" id="top10">
+        <div class="section-header">
+            <div class="section-icon">🔥</div>
+            <h2 contenteditable="true">Top 10 BigQuery Interview Questions (High ROI)</h2>
+        </div>
+        <p style="margin-bottom:14px; color:var(--text-muted); font-size:0.9rem;" contenteditable="true">If you're short on time, master these. Each links to the detailed answer above.</p>
+
+        <button class="expand-all-btn" onclick="toggleAllQA(this, 'top10')">📖 Expand All Answers</button>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">1</span><span class="q-text">Partitioning vs Clustering — Quick Summary</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>Partitioning</strong> = physically separates data (1 column, DATE/INT). <strong>Clustering</strong> = sorts data within partitions (up to 4 columns, any type). Use both together: partition by date, cluster by ID/category. Partition = exact pruning (visible in dry run). Clustering = block pruning (savings appear at runtime).</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">2</span><span class="q-text">Cost Optimization — Top 5 Levers</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <ol>
+                    <li>Avoid <code>SELECT *</code> — name only needed columns</li>
+                    <li>Always filter on partition column</li>
+                    <li>Use clustering for frequently filtered columns</li>
+                    <li>Use materialized views for repeated aggregations</li>
+                    <li>Set <code>maximum_bytes_billed</code> as a safety net</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">3</span><span class="q-text">Window Functions — Key Patterns</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><code>ROW_NUMBER()</code> for dedup, <code>RANK()</code>/<code>DENSE_RANK()</code> for rankings, <code>LAG()</code>/<code>LEAD()</code> for previous/next row, <code>SUM() OVER()</code> for running totals. Use <code>QUALIFY</code> to filter window results without subqueries.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">4</span><span class="q-text">STRUCT / ARRAY — When and How</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>Use STRUCT for grouping fields (address, metadata). Use ARRAY for one-to-many (order items, tags). <code>UNNEST()</code> to flatten arrays. <code>LEFT JOIN UNNEST</code> to keep rows with empty arrays. ARRAY of STRUCT is the most common nested pattern in BigQuery.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">5</span><span class="q-text">ANY_VALUE() — Avoid GROUP BY Bloat</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>Use when grouping by a key and a non-aggregated column is functionally dependent (same value per group). Avoids adding columns to GROUP BY which can increase shuffle cost. Example: <code>SELECT user_id, ANY_VALUE(user_name), COUNT(*) FROM t GROUP BY user_id</code></p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">6</span><span class="q-text">Streaming Buffer — Key Facts</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>Data queryable immediately after streaming. Buffer lasts ~90 minutes. DML can't modify buffer data. Buffer data excluded from time travel. Storage Write API (committed mode) is the modern replacement — exactly-once, no buffer limitations.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">7</span><span class="q-text">CLONE vs COPY — Quick Comparison</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p><strong>CLONE</strong>: instant, zero-copy (metadata only), same region only, supports time-travel cloning. <strong>COPY</strong>: full data duplication, can cross regions, proportional to table size. <strong>Always prefer CLONE</strong> for same-region copies.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">8</span><span class="q-text">Slot Model — How Compute Works</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>1 slot ≈ 1 vCPU + memory. On-demand: shared pool (~2,000 slots). Editions: baseline + autoscaling. Monitor via <code>INFORMATION_SCHEMA.JOBS</code> (<code>total_slot_ms</code>) and Cloud Monitoring. Slot contention = queries queuing/slowing. Fix: reserve dedicated slots or optimize queries.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">9</span><span class="q-text">Denormalization Strategy</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>BigQuery favors wide, denormalized tables. JOINs are expensive (shuffle). Storage is cheap ($0.02/GB). Use nested fields (STRUCT + ARRAY) instead of normalized star schemas. Keep small, frequently-changing dimensions normalized. Pre-join everything else into fact tables.</p>
+            </div>
+        </div>
+
+        <div class="qa-item">
+            <div class="qa-question" onclick="this.parentElement.classList.toggle('open')"><span class="q-num">10</span><span class="q-text">Query Execution Plan Analysis</span><span class="q-arrow">▼</span></div>
+            <div class="qa-answer" contenteditable="true">
+                <p>Check in BigQuery UI after running. Key metrics: <strong>bytes scanned</strong> (cost), <strong>slot time vs wall time</strong> (parallelism), <strong>shuffle bytes</strong> (join/agg efficiency), <strong>spill to disk</strong> (memory pressure). Query <code>INFORMATION_SCHEMA.JOBS</code> for programmatic analysis. High shuffle + low output = good filter; high shuffle + high output = possible cross-join.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SQL RECIPE: MERGE -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-blue" id="merge">
+        <div class="section-header">
+            <div class="section-icon">🔀</div>
+            <h2 contenteditable="true">SQL Recipe: MERGE Operation</h2>
+        </div>
+        <p style="margin-bottom:12px; font-size:0.9rem;" contenteditable="true">The MERGE statement combines INSERT, UPDATE, and DELETE in a single atomic operation. Use it for incremental loads and SCD processing.</p>
+        <div class="code-card">
+            <div class="code-card-header">
+                <span>BigQuery SQL — Merge</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+            </div>
+            <pre><code><span class="kw">MERGE</span> <span class="tbl">target</span> t
+<span class="kw">USING</span> <span class="tbl">source</span> s
+<span class="kw">ON</span> t.window = s.window <span class="kw">AND</span> t.key = s.key
+
+<span class="kw">WHEN MATCHED THEN</span>
+  <span class="kw">UPDATE SET</span> total = s.total
+
+<span class="kw">WHEN NOT MATCHED THEN</span>
+  <span class="kw">INSERT</span> (window, key, total)
+  <span class="kw">VALUES</span> (s.window, s.key, s.total);</code></pre>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SQL RECIPE: INSERT MISSING -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-green" id="insert-missing" style="border-left: 3px solid var(--green);">
+        <div class="section-header">
+            <div class="section-icon" style="background:var(--green-light);">➕</div>
+            <h2 contenteditable="true">SQL Recipe: Insert Only Missing Records</h2>
+        </div>
+        <p style="margin-bottom:12px; font-size:0.9rem;" contenteditable="true">Use <code>NOT EXISTS</code> to insert rows from source that don't already exist in the target. Avoids duplicates without a full MERGE.</p>
+        <div class="code-card">
+            <div class="code-card-header">
+                <span>BigQuery SQL — Insert Missing</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+            </div>
+            <pre><code><span class="kw">INSERT INTO</span> <span class="tbl">`prj-d-prj.dw.target_table`</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> <span class="tbl">`prj-d-prj.dw.source_table`</span> s
+<span class="kw">WHERE NOT EXISTS</span> (
+    <span class="kw">SELECT</span> 1
+    <span class="kw">FROM</span> <span class="tbl">`prj-d-prj.dw.target_table`</span> t
+    <span class="kw">WHERE</span> t.acct_no = s.acct_no
+);</code></pre>
+        </div>
+        <div class="callout tip">
+            <span>💡</span>
+            <div contenteditable="true"><strong>Performance:</strong> For large tables, ensure the join key (<code>acct_no</code>) is part of the clustering columns to minimize bytes scanned.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SQL RECIPE: UPSERT -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-purple" id="upsert">
+        <div class="section-header">
+            <div class="section-icon">🔄</div>
+            <h2 contenteditable="true">SQL Recipe: Upsert (Update + Insert)</h2>
+        </div>
+        <p style="margin-bottom:12px; font-size:0.9rem;" contenteditable="true">The standard upsert pattern in BigQuery uses MERGE to update existing records and insert new ones in a single DML statement.</p>
+        <div class="code-card">
+            <div class="code-card-header">
+                <span>BigQuery SQL — Upsert</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+            </div>
+            <pre><code><span class="kw">MERGE</span> <span class="tbl">`project.dataset.target_table`</span> T
+<span class="kw">USING</span> <span class="tbl">`project.dataset.source_table`</span> S
+<span class="kw">ON</span> T.message_id = S.message_id
+
+<span class="cmt">-- Update existing records</span>
+<span class="kw">WHEN MATCHED THEN</span>
+  <span class="kw">UPDATE SET</span>
+    T.last_updated_ts = <span class="fn">CURRENT_TIMESTAMP</span>(),
+    T.col1 = S.col1,
+    T.col2 = S.col2
+
+<span class="cmt">-- Insert new records</span>
+<span class="kw">WHEN NOT MATCHED THEN</span>
+  <span class="kw">INSERT</span> (message_id, col1, col2, last_updated_ts)
+  <span class="kw">VALUES</span> (S.message_id, S.col1, S.col2, <span class="fn">CURRENT_TIMESTAMP</span>());</code></pre>
+        </div>
+        <div class="callout info">
+            <span>ℹ️</span>
+            <div contenteditable="true"><strong>DML Quotas:</strong> BigQuery allows up to <strong>20 DML statements per table per day</strong> (for free tier) and <strong>1,500</strong> for on-demand. Plan your MERGE frequency accordingly.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SQL RECIPE: DELETE DUPLICATES -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section theme-red" id="dedup">
+        <div class="section-header">
+            <div class="section-icon">🗑️</div>
+            <h2 contenteditable="true">SQL Recipe: Delete Duplicates (Keep Oldest)</h2>
+        </div>
+        <p style="margin-bottom:12px; font-size:0.9rem;" contenteditable="true">First detect duplicates, then delete all but the oldest record per key using <code>ROW_NUMBER()</code>.</p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span>Step 1 — Detect Duplicates</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+            </div>
+            <pre><code><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> <span class="tbl">`prj-d-panfinregstr.code.fin_linkhub_upstream_events`</span>
+<span class="kw">QUALIFY</span> <span class="fn">COUNT</span>(*) <span class="kw">OVER</span> (<span class="kw">PARTITION BY</span> message_id) &gt; 1;</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span>Step 2 — Delete Duplicates, Keep Oldest</span>
+                <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+            </div>
+            <pre><code><span class="kw">DELETE FROM</span> <span class="tbl">`prj-d-panfinregstr.code.fin_linkhub_upstream_events`</span>
+<span class="kw">WHERE</span> message_id <span class="kw">IN</span> (
+  <span class="kw">SELECT</span> message_id
+  <span class="kw">FROM</span> (
+    <span class="kw">SELECT</span>
+      message_id,
+      created_ts,
+      <span class="fn">ROW_NUMBER</span>() <span class="kw">OVER</span> (
+        <span class="kw">PARTITION BY</span> message_id
+        <span class="kw">ORDER BY</span> created_ts <span class="kw">ASC</span>   <span class="cmt">-- oldest = 1</span>
+      ) <span class="kw">AS</span> rn
+    <span class="kw">FROM</span> <span class="tbl">`prj-d-panfinregstr.code.fin_linkhub_upstream_events`</span>
+  )
+  <span class="kw">WHERE</span> rn &gt; 1   <span class="cmt">-- delete all except oldest</span>
+);</code></pre>
+        </div>
+
+        <div class="callout warn">
+            <span>⚠️</span>
+            <div contenteditable="true"><strong>Caution:</strong> This DELETE scans the table twice. For very large tables, consider creating a deduplicated copy with <code>CREATE OR REPLACE TABLE ... AS SELECT ... QUALIFY ROW_NUMBER() ... = 1</code> instead.</div>
+        </div>
+    </div>
+
+</main>
+</div>
+
+<!-- ═══════════ SCRIPTS ═══════════ -->
+<script>
+function copyCode(btn) {
+    const pre = btn.closest('.code-card').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = orig, 1500);
+    });
+}
+
+function downloadHTML() {
+    const html = document.documentElement.outerHTML;
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'BigQuery_Interview_Questions.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+function toggleAllQA(btn, sectionId) {
+    const section = document.getElementById(sectionId);
+    const items = section.querySelectorAll('.qa-item');
+    const allOpen = [...items].every(i => i.classList.contains('open'));
+    items.forEach(i => {
+        if (allOpen) i.classList.remove('open');
+        else i.classList.add('open');
+    });
+    btn.textContent = allOpen ? '📖 Expand All Answers' : '📕 Collapse All Answers';
+}
+</script>
+
+
+
+</body></html>
